@@ -5,15 +5,17 @@
 int xpos;
 int ypos;
 int jstate;
-const int joybutton = 4;
 const int dirPin = 2;
 const int stepPin = 3;
+const int joybutton = 4;
+const int enablePin = 5;
 const int stepsPerRevolution = 200;
 const int stepperSpeed = 5000;
  
 void setup()
 {
   // Declare pins as Outputs 
+  pinMode(enablePin, OUTPUT);
   pinMode(stepPin, OUTPUT);
   pinMode(dirPin, OUTPUT);
   pinMode (joybutton, INPUT_PULLUP);
@@ -48,18 +50,19 @@ delay(1000);
 //move stepper Anticlockwise
 while (xpos <= 480){
   digitalWrite(dirPin, HIGH);
-  anti();
+  moveit();
 }
 
 while (xpos >= 520){
   digitalWrite(dirPin, LOW);
-  clockwise();
+  moveit();
 }
 
 
 if ((xpos >=481) and (xpos <= 520) && (ypos >= 481) and (ypos <= 520)){
   //stop stepper
   digitalWrite(stepPin,LOW);
+  digitalWrite(enablePin,LOW); // this is needed to lock the stepper in place while not moving
   }
 
 /* 
@@ -91,16 +94,7 @@ if ((xpos >=481) and (xpos <= 520) && (ypos >= 481) and (ypos <= 520)){
   
 */
 }
-void anti(){
-    
-    xpos = analogRead(xaxis);
-    digitalWrite(stepPin, HIGH);
-    delayMicroseconds(stepperSpeed);
-    digitalWrite(stepPin, LOW);
-    delayMicroseconds(stepperSpeed);
-}
-
-void clockwise(){
+void moveit(){
     
     xpos = analogRead(xaxis);
     digitalWrite(stepPin, HIGH);
