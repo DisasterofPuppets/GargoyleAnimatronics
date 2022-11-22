@@ -139,7 +139,7 @@ righteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo an
    pwm.setPWM(6,0,leftX(lefteyeX)+90); // L
    pwm.setPWM(7,0,reverse(lefteyeX)+90); // R
 
-// Left Eye movement
+// Right Eye movement
    pwm.setPWM(8,0,leftY(lefteyeY)+90); // Up
    pwm.setPWM(9,0,reverse(lefteyeY)+90); // Down
    pwm.setPWM(10,0,leftX(lefteyeX)+90); // L
