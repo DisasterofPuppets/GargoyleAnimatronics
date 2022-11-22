@@ -140,10 +140,10 @@ righteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo an
    pwm.setPWM(7,0,reverse(lefteyeX)+90); // R
 
 // Right Eye movement
-   pwm.setPWM(8,0,leftY(lefteyeY)+90); // Up
-   pwm.setPWM(9,0,reverse(lefteyeY)+90); // Down
-   pwm.setPWM(10,0,leftX(lefteyeX)+90); // L
-   pwm.setPWM(11,0,reverse(lefteyeX)+90); // R
+   pwm.setPWM(8,0,rightY(righteyeY)+90); // Up
+   pwm.setPWM(9,0,reverse(righteyeY)+90); // Down
+   pwm.setPWM(10,0,rightX(righteyeX)+90); // L
+   pwm.setPWM(11,0,reverse(righteyeX)+90); // R
    
    
 
@@ -165,6 +165,13 @@ int rightX(int ang2){
   int pulse = map(ang2,0,180,50,150);
   return pulse;
 }
+
+//right eye servo min max mapping left and right
+int rightY(int ang9){
+  int pulse = map(ang9,0,180,50,150);
+  return pulse;
+}
+
 //reverseeye servo min max mapping left and right
 int reverse(int ang6){
   int pulse = 620 - map(ang6,0,180,50,150);
