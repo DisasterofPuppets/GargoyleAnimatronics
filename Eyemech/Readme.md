@@ -1,6 +1,4 @@
-# GargoyleAnimatronics
-
-## Head - The Eyes
+# Eye Mech
 
 ### Hardware required
 
