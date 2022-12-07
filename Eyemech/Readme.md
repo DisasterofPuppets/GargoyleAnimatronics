@@ -6,11 +6,15 @@ Head - The Eyes
 
 Eyeballs
 - 2 x 10 mm / 0.39 Inch Universal Joints with 3 mm / 0.12 Inch hole
-- 2x 40 mm / 1.57 Inch Clear cabochons with eyeball design
+- 2 x 40 mm / 1.57 Inch Clear cabochons with eyeball design
 - Braided stainless steel wire 1 mm / 0.39 Inch
+- 8 x 3mm / 0.12 Inch screw inserts
 
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/10mmuniversaljoint.jpg" height="100"></img>
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/Cabochon.jpg" height="100"></img>
+<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/wire.jpg" height="100"></img>
+<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/3mmbrassscrewinsert.jpg"></img>
+
 
 Eyelids
 -
