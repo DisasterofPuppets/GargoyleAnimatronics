@@ -9,6 +9,8 @@ Eyeballs
 - 2x 40mm Clear cabochons with eyeball design
 - Braided stainless steel wire (1 mm / 0.39 Inch)
 
+<img>https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/Cabochon.jpg</img>
+
 
 Eyelids
 -
