@@ -37,7 +37,7 @@
 
 This included blinker control (open / closed) Blink function.
 
-Sets eyelids closed on wake
+Sets eyelids closed on wake, clicking joystick button opens the eyes for the first time and they remain open.
 
 ## Pending Features
 - Function for wake up / flutter eyelids etc.
