@@ -13,7 +13,7 @@ Eyeballs
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/10mmuniversaljoint.jpg" height="100"></img>
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/Cabochon.jpg" height="100"></img>
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/wire.jpg" height="100"></img>
-<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/3mmbrassscrewinsert.jpg"></img>
+<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/3mmbrassscrewinsert.jpg" height="100"></img>
 
 
 Eyelids
