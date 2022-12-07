@@ -1,8 +1,8 @@
 /*
  * With the servo wiring pointing to the Right
- * 0 degrees - max anti clockwise
+ * 0 degrees - max clockwise
  * 90 degrees - neutral aka middle
- * 180 degrees - max clockwise
+ * 180 degrees - max anti clockwise
  * 
  * Joystick held with connectors to the left
  * 
@@ -13,28 +13,19 @@
  * 
  * SERVO SETUP
  *  !! - Reverse direction of counterpart
- * EYELIDS
+ * EYELIDS (Mg90s servos)
  * 0 - Top left Eyelid 
  * 1 - Bottom Left Eyelid 
  * 2 - Top Right Eyelid 
  * 3 - Bottom Right Eyelid
  * 
- * LEFT EYE
- * 4 - Up
- * 5 - Down !!
- * 6 - Left
- * 7 - Right !!
+ * LEFT EYE (MG996R Servo)
+ * 4 - Left , Right
+ * 5 - Up, Down
  * 
- * RIGHT EYE
- * 8 - Up
- * 9 - Down !!
- * 10 - Left
- * 11 - Right !!
- *
- * 12
- * 13
- * 14
- * 15
+ * RIGHT EYE (MG996R Servo)
+ * 6 - Left , Right
+ * 7 - Up, Down 
  
  */
 
@@ -47,6 +38,7 @@
 #define joyY A1 // X pin input
 
 // used to store Joystick mapping
+int wake = 0;
 int xPos;
 int yPos;
 const int switchPin = 3; // digital pin for switch input
@@ -79,24 +71,19 @@ void setup(){
           
           //  set all to home positions
 
-          // Eyelids set to open
-          pwm.setPWM(0,0,hometoAngle(0));
-          pwm.setPWM(1,0,hometoAngle(0));
-          pwm.setPWM(2,0,hometoAngle(0));
-          pwm.setPWM(3,0,hometoAngle(0));
+          // Eyelids set to closed
+          pwm.setPWM(0,0,hometoAngle(180));
+          pwm.setPWM(1,0,hometoAngle(180));
+          pwm.setPWM(2,0,hometoAngle(180));
+          pwm.setPWM(3,0,hometoAngle(180));
 
           // Left Eye set to middle
-          pwm.setPWM(4,0,hometoAngle(90));
-          pwm.setPWM(5,0,hometoAngle(90));
-          pwm.setPWM(6,0,hometoAngle(90));
-          pwm.setPWM(7,0,hometoAngle(90));
-
-          // Right Eye set to middle
-          pwm.setPWM(8,0,hometoAngle(90));
-          pwm.setPWM(9,0,hometoAngle(90));
-          pwm.setPWM(10,0,hometoAngle(90));
-          pwm.setPWM(11,0,hometoAngle(90));
+          pwm.setPWM(4,0,hometoAngle(90)); //(Left, Right)
+          pwm.setPWM(5,0,hometoAngle(90)); //(Up, Down)
           
+          // Right Eye set to middle 
+          pwm.setPWM(6,0,hometoAngle(90)); //(Left, Right)
+          pwm.setPWM(7,0,hometoAngle(90)); //(Up, Down)
           
           delay(100);
           
@@ -115,11 +102,20 @@ if (monitoring== 0){
 }       
 // end monitoring
 
-
+// Eyelids are closed on initiation, clicking push button once will open them..
+//note, make function here to make multiple closed / open here for wake up sequence.
 if (digitalRead(switchPin)== 0){
-  blink();
-}
-       
+      if (wake == 0){
+        wake = 1;
+        pwm.setPWM(0,0,hometoAngle(0));
+        pwm.setPWM(1,0,hometoAngle(0));
+        pwm.setPWM(2,0,hometoAngle(0));
+        pwm.setPWM(3,0,hometoAngle(0));
+      }
+      else if (wake == 1){
+        blink();
+      }
+} 
 // get the joystick position
         
 int xPos = analogRead(joyX); // reads X position
@@ -134,19 +130,14 @@ righteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo an
 
 
 // Left Eye movement
-   pwm.setPWM(4,0,leftY(lefteyeY)+90); // Up
-   pwm.setPWM(5,0,reverse(lefteyeY)+90); // Down
-   pwm.setPWM(6,0,leftX(lefteyeX)+90); // L
-   pwm.setPWM(7,0,reverse(lefteyeX)+90); // R
-
-// Right Eye movement
-   pwm.setPWM(8,0,rightY(righteyeY)+90); // Up
-   pwm.setPWM(9,0,reverse(righteyeY)+90); // Down
-   pwm.setPWM(10,0,rightX(righteyeX)+90); // L
-   pwm.setPWM(11,0,reverse(righteyeX)+90); // R
+   pwm.setPWM(4,0,leftY(lefteyeX)+90); // Left Right
+   pwm.setPWM(5,0,leftX(lefteyeY)+90); // Up Down
    
+ // Right Eye movement
+   pwm.setPWM(6,0,rightY(righteyeX)+90); // Left Right
+   pwm.setPWM(7,0,rightY(righteyeY)+90); // Up Down
+ 
    
-
   if (monitoring == 0){
         
         Serial.print("Right Eye X : ");
@@ -172,12 +163,6 @@ int rightY(int ang9){
   return pulse;
 }
 
-//reverseeye servo min max mapping left and right
-int reverse(int ang6){
-  int pulse = 620 - map(ang6,0,180,50,150);
-  return pulse;
-}
-
 //lefteye servo min max mapping left and right
 int leftX(int ang4){
   int pulse = map(ang4,0,180,50,150);
@@ -199,6 +184,7 @@ void blink(){
   pwm.setPWM(2,0,hometoAngle(180));
   pwm.setPWM(3,0,hometoAngle(180));   
   delay(100);
+  //open again
   pwm.setPWM(0,0,hometoAngle(0));   
   pwm.setPWM(1,0,hometoAngle(0));
   pwm.setPWM(2,0,hometoAngle(0));   
