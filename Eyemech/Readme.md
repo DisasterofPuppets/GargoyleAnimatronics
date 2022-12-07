@@ -19,7 +19,7 @@ Eyelids
 
 - 4 x 3mm / 0.12 Inch screw inserts
 
-<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/10mmuniversaljoint.jpg" height="100"></img>
+<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/3mmbrassscrewinsert.jpg" height="100"></img>
 
 Mounting
 
