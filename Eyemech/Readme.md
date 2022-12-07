@@ -7,12 +7,12 @@ Head - The Eyes
 Eyeballs
 - 2 x 10mm Universal Joints  
 - 2x 40mm Clear cabochons with eyeball design
-- Braided stainless steel wire (1 mm)
+- Braided stainless steel wire (1 mm / 0.39 Inch)
 
 
 Eyelids
 -
-- Braided stainless steel wire (1.4 mm)
+- Braided stainless steel wire (1.4 mm / 0.55 Inch)
 
 
 This included blinker control (open / closed) Blink function.
