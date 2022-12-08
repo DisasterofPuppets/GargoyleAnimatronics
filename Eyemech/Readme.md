@@ -22,7 +22,7 @@
 - 4 x 3mm / 0.12 Inch screw inserts
 - 4 x Mg90s servos
 - 4 x 3mm / 0.12 Inch thread x 10 mm / 0.39 Inch length machine screws
-- 4 x 8mm / 0.31 Inch base 12mm / 0.48 Inch length (if you can get longer do so) earring base
+- 4 x 8mm / 0.31 Inch base 12mm / 0.48 Inch length (if you can get longer do so) earring base. You don't need the clips but I don't think you can purchase the stems alone.
 
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/3mmbrassscrewinsert.jpg" height="100"></img>
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/mg90s.jpg" height="100"></img>
