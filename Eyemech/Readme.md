@@ -51,7 +51,7 @@ This includes a blinker control (open / closed) aka Blink function.
 
 Default eyelids closed on wake, clicking joystick button opens the eyes for the first time and they remain open.
 
-Smoothing eyeball movement inspired by XRobots https://github.com/XRobots/ServoSmoothing
+Smoothing eyeball movement inspired by XRobots https://github.com/XRobots/ServoSmoothing<br>
 https://youtu.be/jsXolwJskKM
 
 ## Pending Features
