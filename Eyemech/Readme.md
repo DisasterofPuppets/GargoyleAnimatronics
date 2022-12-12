@@ -2,6 +2,9 @@
 
 ### Hardware required
 
+Power
+With 8 MG996R servos @ 2.5 Amps each you need at least 20 Amps @ 5 volts. This may increase if additional servos are added.
+
 #### Eyeballs
 
 - 2 x 10 mm / 0.39 Inch Universal Joints with 3 mm / 0.12 Inch hole
@@ -20,12 +23,12 @@
 #### Eyelids
 
 - 4 x 3mm / 0.12 Inch screw inserts
-- 4 x Mg90s servos
+- 4 x MG 996R servos
 - 4 x 3mm / 0.12 Inch thread x 10 mm / 0.39 Inch length machine screws
 - 4 x 8mm / 0.31 Inch base 12mm / 0.48 Inch length (if you can get longer do so) earring base. You don't need the clips but I don't think you can purchase the stems alone.
 
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/3mmbrassscrewinsert.jpg" height="100"></img>
-<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/mg90s.jpg" height="100"></img>
+<img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/996R.jpg" height="100"></img>
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/screws.jpg" height="100"></img>
 <img src="https://github.com/DisasterofPuppets/GargoyleAnimatronics/blob/main/Partimages/earring8mmx12mm.png" height="100"></img>
 
@@ -56,11 +59,7 @@ https://youtu.be/jsXolwJskKM
 
 ## Pending Features
 - Function for wake up / flutter eyelids etc.
-
----
-
-## BUGS 
-- MG90s servos seem to get hot / twitch a bit, could just be setup related.
-
-
+- Left Eye only (eye and blinker)
+- Right Eye only (eye and blinker)
+- Full movement test on initialisation
 ---
