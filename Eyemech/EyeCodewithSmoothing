@@ -81,7 +81,7 @@ void setup(){
           pwm.setPWM(0,0,hometoAngle(180));
           pwm.setPWM(1,0,hometoAngle(180));
           pwm.setPWM(2,0,hometoAngle(180));
-          pwm.setPWM(3,0,hometoAngle(180));
+          pwm.setPWM(3,0,hometoAngle(180)); 
 
           // Left Eye set to middle
           pwm.setPWM(4,0,hometoAngle(90)); //(Left, Right)
@@ -113,10 +113,10 @@ if (monitoring== 0){
 if (digitalRead(switchPin)== 0){
       if (wake == 0){
         wake = 1;
-        pwm.setPWM(0,0,hometoAngle(0));
-        pwm.setPWM(1,0,hometoAngle(0));
-        pwm.setPWM(2,0,hometoAngle(0));
-        pwm.setPWM(3,0,hometoAngle(0));
+        pwm.setPWM(0,0,hometoAngle(130));
+        pwm.setPWM(1,0,hometoAngle(145));
+        pwm.setPWM(2,0,hometoAngle(130));
+        pwm.setPWM(3,0,hometoAngle(145));
       }
       else if (wake == 1){
         blink();
@@ -195,8 +195,8 @@ void blink(){
   pwm.setPWM(3,0,hometoAngle(180));   
   delay(100);
   //open again
-  pwm.setPWM(0,0,hometoAngle(0));   
-  pwm.setPWM(1,0,hometoAngle(0));
-  pwm.setPWM(2,0,hometoAngle(0));   
-  pwm.setPWM(3,0,hometoAngle(0));
+  pwm.setPWM(0,0,hometoAngle(130));   
+  pwm.setPWM(1,0,hometoAngle(145));
+  pwm.setPWM(2,0,hometoAngle(130));   
+  pwm.setPWM(3,0,hometoAngle(145));
 }
