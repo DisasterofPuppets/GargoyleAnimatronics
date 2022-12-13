@@ -1,3 +1,10 @@
+#Functions:
+- Move both eyes with a joystick
+- Function for wake up / flutter eyelids etc.
+- Left Eye only (eye and blinker)
+- Right Eye only (eye and blinker)
+- Blink
+
 # Eye Mech
 
 ### Hardware required
@@ -58,8 +65,6 @@ Smoothing eyeball movement inspired by XRobots https://github.com/XRobots/ServoS
 https://youtu.be/jsXolwJskKM
 
 ## Pending Features
-- Function for wake up / flutter eyelids etc.
-- Left Eye only (eye and blinker)
-- Right Eye only (eye and blinker)
 - Full movement test on initialisation
+- Wink
 ---
