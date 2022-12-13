@@ -1,3 +1,9 @@
+// Smoothing obtained from XRobots https://github.com/XRobots/ServoSmoothing
+// https://youtu.be/jsXolwJskKM
+
+// Gargoyle Eyeball controller
+//Disaster of Puppets 2020
+
 /*
  * With the servo wiring pointing to the Right
  * 0 degrees - max clockwise
@@ -29,11 +35,6 @@
  
  */
 
-// Smoothing obtained from XRobots https://github.com/XRobots/ServoSmoothing
-// https://youtu.be/jsXolwJskKM
-
-// Micro Servo Position confirmation
-//Disaster of Puppets 2020
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
@@ -45,9 +46,11 @@ int wake = 0;
 int xPos;
 int yPos;
 const int switchPin = 3; // digital pin for switch input
+const int leftpin = 4; // digital pin for left select
+const int rightpin = 6; //digital pin for right select
 int buttonState = 0;
-int righteyeX;
-int lefteyeX;
+int righteyeX = 0;
+int lefteyeX = 0;
 int righteyeY;
 int lefteyeY;
 int pos = 0;
@@ -56,6 +59,9 @@ float xSmoothed;
 float ySmoothed;
 float xPrev;
 float yPrev;
+int leftselect;
+int rightselect;
+
 
 // called this way, it uses the default address 0x40
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
@@ -73,6 +79,8 @@ void setup(){
           
           pinMode(joyX, INPUT);
           pinMode(joyY, INPUT);
+          pinMode(leftpin,INPUT_PULLUP);
+          pinMode(rightpin,INPUT_PULLUP);
           digitalWrite(switchPin, HIGH);
           
           //  set all to home positions
@@ -97,65 +105,60 @@ void setup(){
 
 void loop(){
 
-//monitoring
-if (monitoring== 0){        
-        Serial.print("X : ");
-        Serial.println(analogRead(joyX));
-        Serial.print("Button: ");
-        Serial.println(digitalRead(switchPin));
-        Serial.println( "================" );  // Carriage Return
-     
-}       
-// end monitoring
+
 
 // Eyelids are closed on initiation, clicking push button once will open them..
-//note, make function here to make multiple closed / open here for wake up sequence.
+
+//Get Button States
+
 if (digitalRead(switchPin)== 0){
       if (wake == 0){
         wake = 1;
-        pwm.setPWM(0,0,hometoAngle(130));
-        pwm.setPWM(1,0,hometoAngle(145));
-        pwm.setPWM(2,0,hometoAngle(130));
-        pwm.setPWM(3,0,hometoAngle(145));
+        risenshine();
+        //pwm.setPWM(0,0,hometoAngle(135));
+        //pwm.setPWM(1,0,hometoAngle(145));
+        //pwm.setPWM(2,0,hometoAngle(135));
+        //pwm.setPWM(3,0,hometoAngle(145));
       }
       else if (wake == 1){
         blink();
       }
 } 
-// get the joystick position
-        
-int xPos = analogRead(joyX); // reads X position
-int yPos = analogRead(joyY); // reads Y position
-        
-// Map the joystick position to the servo angle
-        
-lefteyeX = map(xPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
-lefteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
-righteyeX = map(xPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
-righteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
 
-xSmoothed = (lefteyeX *0.05) + (xPrev * 0.95);
-ySmoothed = (lefteyeY *0.05) + (yPrev * 0.95);
+  int leftselect = digitalRead(leftpin); // is just left selected?
+  int rightselect = digitalRead(rightpin); // is just right selected?
 
-xPrev = xSmoothed;
-yPrev = ySmoothed;
-
-// Left Eye movement
-   pwm.setPWM(4,0,leftY(xSmoothed)+90); // Left Right
-   pwm.setPWM(5,0,leftX(ySmoothed)+90); // Up Down
-   
- // Right Eye movement
-   pwm.setPWM(6,0,rightY(xSmoothed)+90); // Left Right
-   pwm.setPWM(7,0,rightY(ySmoothed)+90); // Up Down
- 
-   
-  if (monitoring == 0){
-        
-        Serial.print("Right Eye X : ");
-        Serial.println(righteyeX);
+  if (leftselect == 0){
+      leftonly();
+  }
+  if (rightselect == 0){
+      rightonly();
   }
 
+  if (leftselect == 1 && rightselect == 1) {
+      botheyes();
+  }
+
+  //monitoring
+  if (monitoring == 0){        
+        Serial.print("X : ");
+        Serial.println(analogRead(joyX));
+        Serial.print("Y : ");
+        Serial.println(analogRead(joyY));
+        Serial.print("Button: ");
+        Serial.println(digitalRead(switchPin));
+        Serial.println( "================" );  // Carriage Return
+        Serial.print("Left : ");
+        Serial.println(leftselect);
+        Serial.print("Right : ");
+        Serial.println(rightselect);
+        Serial.println( "================" );  // Carriage Return
+        delay(300);
+  }       
+  // end monitoring
+
 }
+
 
 int hometoAngle(int ang){
   int pulse = map(ang,0,180, SERVOMIN,SERVOMAX);
@@ -186,6 +189,76 @@ int leftY(int ang8){
   return pulse;
 }
 
+void risenshine(){
+  
+  //open
+  pwm.setPWM(0,0,hometoAngle(170));   
+  pwm.setPWM(1,0,hometoAngle(170));
+  pwm.setPWM(2,0,hometoAngle(170));
+  pwm.setPWM(3,0,hometoAngle(170));   
+  delay(200);
+    //open
+  pwm.setPWM(0,0,hometoAngle(160));   
+  pwm.setPWM(1,0,hometoAngle(160));
+  pwm.setPWM(2,0,hometoAngle(160));
+  pwm.setPWM(3,0,hometoAngle(160));   
+  delay(300);
+  //close
+  pwm.setPWM(0,0,hometoAngle(180));   
+  pwm.setPWM(1,0,hometoAngle(180));
+  pwm.setPWM(2,0,hometoAngle(180));   
+  pwm.setPWM(3,0,hometoAngle(180)); 
+  delay(900);
+  //open
+  pwm.setPWM(0,0,hometoAngle(160));   
+  pwm.setPWM(1,0,hometoAngle(160));
+  pwm.setPWM(2,0,hometoAngle(160));
+  pwm.setPWM(3,0,hometoAngle(160));   
+  delay(200);
+  //open
+  pwm.setPWM(0,0,hometoAngle(150));   
+  pwm.setPWM(1,0,hometoAngle(150));
+  pwm.setPWM(2,0,hometoAngle(150));
+  pwm.setPWM(3,0,hometoAngle(150));   
+  delay(300);
+  //close
+  pwm.setPWM(0,0,hometoAngle(180));   
+  pwm.setPWM(1,0,hometoAngle(180));
+  pwm.setPWM(2,0,hometoAngle(180));   
+  pwm.setPWM(3,0,hometoAngle(180)); 
+  delay(700);
+  //open
+  pwm.setPWM(0,0,hometoAngle(150));   
+  pwm.setPWM(1,0,hometoAngle(150));
+  pwm.setPWM(2,0,hometoAngle(150));
+  pwm.setPWM(3,0,hometoAngle(150));   
+  delay(600);
+   //open
+  pwm.setPWM(0,0,hometoAngle(155));   
+  pwm.setPWM(1,0,hometoAngle(155));
+  pwm.setPWM(2,0,hometoAngle(155));   
+  pwm.setPWM(3,0,hometoAngle(155)); 
+  delay(50);
+    //open wider
+  pwm.setPWM(0,0,hometoAngle(150));   
+  pwm.setPWM(1,0,hometoAngle(150));
+  pwm.setPWM(2,0,hometoAngle(150));   
+  pwm.setPWM(3,0,hometoAngle(150)); 
+  delay(300);
+   //close
+  pwm.setPWM(0,0,hometoAngle(180));   
+  pwm.setPWM(1,0,hometoAngle(180));
+  pwm.setPWM(2,0,hometoAngle(180));   
+  pwm.setPWM(3,0,hometoAngle(180));   
+  delay(100);
+    //open wider
+  pwm.setPWM(0,0,hometoAngle(135));   
+  pwm.setPWM(1,0,hometoAngle(145));
+  pwm.setPWM(2,0,hometoAngle(135));   
+  pwm.setPWM(3,0,hometoAngle(145)); 
+  delay(300);
+}
+
 void blink(){
   //left lids
   pwm.setPWM(0,0,hometoAngle(180));   
@@ -193,10 +266,95 @@ void blink(){
   //right lids
   pwm.setPWM(2,0,hometoAngle(180));
   pwm.setPWM(3,0,hometoAngle(180));   
-  delay(100);
+  delay(50);
   //open again
-  pwm.setPWM(0,0,hometoAngle(130));   
+  pwm.setPWM(0,0,hometoAngle(135));   
   pwm.setPWM(1,0,hometoAngle(145));
-  pwm.setPWM(2,0,hometoAngle(130));   
+  pwm.setPWM(2,0,hometoAngle(135));   
   pwm.setPWM(3,0,hometoAngle(145));
+}
+
+
+
+void botheyes(){
+
+  // get the joystick position
+  int xPos = analogRead(joyX); // reads X position
+  int yPos = analogRead(joyY); // reads Y position
+  int leftselect = digitalRead(leftpin); // is just left selected?
+  int rightselect = digitalRead(rightpin); // is just right selected?
+
+// Map the joystick position to the servo angle
+        
+lefteyeX = map(xPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+lefteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+righteyeX = map(xPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+righteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+
+xSmoothed = (lefteyeX *0.05) + (xPrev * 0.95);
+ySmoothed = (lefteyeY *0.05) + (yPrev * 0.95);
+
+xPrev = xSmoothed;
+yPrev = ySmoothed;
+
+// Left Eye movement
+   pwm.setPWM(4,0,leftY(xSmoothed)+90); // Left Right
+   pwm.setPWM(5,0,leftX(ySmoothed)+90); // Up Down
+   
+ // Right Eye movement
+   pwm.setPWM(6,0,rightY(xSmoothed)+90); // Left Right
+   pwm.setPWM(7,0,rightY(ySmoothed)+90); // Up Down
+}
+
+void leftonly(){
+  // get the joystick position
+  int xPos = analogRead(joyX); // reads X position
+  int yPos = analogRead(joyY); // reads Y position
+  int leftselect = digitalRead(leftpin); // is just left selected?
+  int rightselect = digitalRead(rightpin); // is just right selected?
+
+// Map the joystick position to the servo angle
+        
+lefteyeX = map(xPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+lefteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+
+xSmoothed = (lefteyeX *0.05) + (xPrev * 0.95);
+ySmoothed = (lefteyeY *0.05) + (yPrev * 0.95);
+
+xPrev = xSmoothed;
+yPrev = ySmoothed;
+
+// Left Eye movement
+   pwm.setPWM(4,0,leftY(xSmoothed)+90); // Left Right
+   pwm.setPWM(5,0,leftX(ySmoothed)+90); // Up Down
+  
+}
+
+void rightonly(){
+  // get the joystick position
+  int xPos = analogRead(joyX); // reads X position
+  int yPos = analogRead(joyY); // reads Y position
+  int leftselect = digitalRead(leftpin); // is just left selected?
+  int rightselect = digitalRead(rightpin); // is just right selected?
+
+// Map the joystick position to the servo angle
+        
+lefteyeX = map(xPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+lefteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+righteyeX = map(xPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+righteyeY = map(yPos,0,1023,125,620); // Maps the Joystick X reading to servo angle 
+
+xSmoothed = (lefteyeX *0.05) + (xPrev * 0.95);
+ySmoothed = (lefteyeY *0.05) + (yPrev * 0.95);
+
+xPrev = xSmoothed;
+yPrev = ySmoothed;
+
+ // Right Eye movement
+   pwm.setPWM(6,0,rightY(xSmoothed)+90); // Left Right
+   pwm.setPWM(7,0,rightY(ySmoothed)+90); // Up Down
+}
+
+void startup(){
+  // runs all servo tests
 }
