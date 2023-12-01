@@ -1,4 +1,4 @@
-#include <Wire.h>
+github#include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
 // Servo Controller 1 ---------------------
@@ -26,8 +26,10 @@ const long interval = 1000;
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
+// these will need to be changed for different servos.
 #define SERVOMIN 125
 #define SERVOMAX 575
+
 
 const int numSamples = 10;
 
@@ -54,7 +56,7 @@ bool yHit = false;
 //Joy X default home = 507
 // Joy Y default home = 508
 // Switch Pullup = 1 by default
-// 125 is low, 572 high and 348 mid after mapping
+
 
 void setup() {
 
@@ -73,14 +75,14 @@ void setup() {
     pwm.setPWM(wingMid,0,angleToPulse(180)); //servo number , board number, angle (it is reversed)
 
  // Right Eye
-    pwm.setPWM(rEyeX,0,angleToPulse(0)); //servo number , board number, angle
-    pwm.setPWM(rEyeY,0,angleToPulse(0)); //servo number , board number, angle
+    pwm.setPWM(rEyeX,0,angleToPulse(90)); //servo number , board number, angle
+    pwm.setPWM(rEyeY,0,angleToPulse(90)); //servo number , board number, angle
     pwm.setPWM(rBlinkTop,0,angleToPulse(0)); //servo number , board number, angle
     pwm.setPWM(rBlinkBot,0,angleToPulse(0)); //servo number , board number, angle
 
 // Left Eye
-    pwm.setPWM(lEyeX,0,angleToPulse(0)); //servo number , board number, angle
-    pwm.setPWM(lEyeY,0,angleToPulse(0)); //servo number , board number, angle
+    pwm.setPWM(lEyeX,0,angleToPulse(90)); //servo number , board number, angle
+    pwm.setPWM(lEyeY,0,angleToPulse(90)); //servo number , board number, angle
     pwm.setPWM(lBlinkTop,0,angleToPulse(0)); //servo number , board number, angle
     pwm.setPWM(lBlinkBot,0,angleToPulse(0)); //servo number , board number, angle
 
@@ -95,17 +97,20 @@ unsigned long currentMillis = millis();
 
 // checking the values several times and averaging for smoother results
 
-   joyX = multisample(joyXPin);
-   joyY = multisample(joyYPin);
+   //joyX = multisample(joyXPin);
+   //joyY = multisample(joyYPin);
+
+   joyX = analogRead(joyXPin);
+   joyY = analogRead(joyYPin);
    joyB = digitalRead(joySwPin);
    mod1 = digitalRead(modButton1);
    mod2 = digitalRead(modButton2);
    mod3 = digitalRead(modButton3);
 
-  //Serial.print("X = ");
-  //Serial.println(joyX);
-  //Serial.print("Y = ");
-  //Serial.println(joyY);
+  Serial.print("X = ");
+  Serial.println(joyX);
+  Serial.print("Y = ");
+  Serial.println(joyY);
   //Serial.print("Button = ");
   //Serial.println(joyB);
   //Serial.print("Mod Button = ");
@@ -202,20 +207,21 @@ void WINGY(){
 
 //************************************************************** EYES **************************************************************
 // This is controlled by the joysticks ntural state. No mod buttons pressed
-// 125 is low, 572 high and 348 mid after mapping
+// left is 0 - mid 508 - right 1023
 void EYES(){
 
    joyX = multisample(joyXPin);
    joyY = multisample(joyYPin);
    joyB = digitalRead(joySwPin);
-   mapX = map(joyX,0,1023,SERVOMIN,SERVOMAX);
+   // manually mapping angles here seems to fix issue / doesn't pickup servomin/max???
+   mapX = map(joyX,0,1023,0,120);
    mapY = map(joyY,0,1023,SERVOMIN,SERVOMAX); 
 
 //HORIZONTAL MOVEMENT
 // centered (default position)
-if (mapX <=340 && mapX >= 350){
-  pwm.setPWM(rEyeX,0,angleToPulse(0));
-  pwm.setPWM(lEyeX,0,angleToPulse(0));
+if (mapX >=500 && mapX <= 510){
+  pwm.setPWM(rEyeX,0,angleToPulse(90));
+  pwm.setPWM(lEyeX,0,angleToPulse(90));
 }
 else {
   // move with Joystick X
@@ -225,9 +231,9 @@ else {
 
 // VERTICAL MOVEMENT
 // centered (default position)
-if (mapY <= 340 && mapY >= 350){
-  pwm.setPWM(rEyeY,0,angleToPulse(0));
-  pwm.setPWM(lEyeY,0,angleToPulse(0));
+if (mapY >= 500 && mapY <= 510){
+  pwm.setPWM(rEyeY,0,angleToPulse(90));
+  pwm.setPWM(lEyeY,0,angleToPulse(90));
 }
 else {
   // move with Joystick Y
