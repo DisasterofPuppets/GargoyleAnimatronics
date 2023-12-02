@@ -1,5 +1,13 @@
-github#include <Wire.h>
+// Smoothing obtained from XRobots https://github.com/XRobots/ServoSmoothing
+// https://youtu.be/jsXolwJskKM#include 
+
+//if you have trouble uploading, disconnect the servo board from external power
+
 #include <Adafruit_PWMServoDriver.h>
+
+// set to flase to stop serial output
+// make sure this is off so everything responds in realtime
+const bool debug = false;
 
 // Servo Controller 1 ---------------------
 int wingLeft = 0;
@@ -28,7 +36,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
 // these will need to be changed for different servos.
 #define SERVOMIN 125
-#define SERVOMAX 575
+#define SERVOMAX 620
 
 
 const int numSamples = 10;
@@ -40,11 +48,16 @@ const int numSamples = 10;
 #define modButton1 4
 #define modButton2 5
 #define modButton3 6
-int joyX = 0; 
-int joyY = 0;
-int joyB = 0;
+int joyX; 
+int joyY;
 int mapX;
 int mapY;
+float xSmoothed;
+float ySmoothed;
+float xPrev;
+float yPrev;
+bool joyB = false;
+bool wake = false;
 bool LEDON = false;
 bool mod1 = false;
 bool mod2 = false;
@@ -77,14 +90,14 @@ void setup() {
  // Right Eye
     pwm.setPWM(rEyeX,0,angleToPulse(90)); //servo number , board number, angle
     pwm.setPWM(rEyeY,0,angleToPulse(90)); //servo number , board number, angle
-    pwm.setPWM(rBlinkTop,0,angleToPulse(0)); //servo number , board number, angle
-    pwm.setPWM(rBlinkBot,0,angleToPulse(0)); //servo number , board number, angle
+    pwm.setPWM(rBlinkTop,0,angleToPulse(180)); //servo number , board number, angle
+    pwm.setPWM(rBlinkBot,0,angleToPulse(180)); //servo number , board number, angle
 
 // Left Eye
     pwm.setPWM(lEyeX,0,angleToPulse(90)); //servo number , board number, angle
     pwm.setPWM(lEyeY,0,angleToPulse(90)); //servo number , board number, angle
-    pwm.setPWM(lBlinkTop,0,angleToPulse(0)); //servo number , board number, angle
-    pwm.setPWM(lBlinkBot,0,angleToPulse(0)); //servo number , board number, angle
+    pwm.setPWM(lBlinkTop,0,angleToPulse(180)); //servo number , board number, angle
+    pwm.setPWM(lBlinkBot,0,angleToPulse(180)); //servo number , board number, angle
 
   
   delay(2000);
@@ -95,26 +108,44 @@ void loop() {
 unsigned long currentMillis = millis();
 // start timers
 
+// Eyelids are closed on initiation, clicking push button once will open them..
+// get the joystick button State
+
+/*
+if (digitalRead(joySwPin)){ // on first press of thejoystick button
+  if (wake = false){
+    wake = !wake; //set wake to true /opposite of existing status
+    RISEANDSHINE(); //run the wake up function.
+  }
+  else if (wake){    // the above statement has already run, Gargoyle will be awake, so randomly run the Blink function.
+    BLINK();
+  }
+}
+*/
 // checking the values several times and averaging for smoother results
 
    //joyX = multisample(joyXPin);
    //joyY = multisample(joyYPin);
 
-   joyX = analogRead(joyXPin);
-   joyY = analogRead(joyYPin);
-   joyB = digitalRead(joySwPin);
-   mod1 = digitalRead(modButton1);
-   mod2 = digitalRead(modButton2);
-   mod3 = digitalRead(modButton3);
+   //joyX = analogRead(joyXPin);
+   //joyY = analogRead(joyYPin);
+   //joyB = digitalRead(joySwPin);
+   //mod1 = digitalRead(modButton1);
+  // mod2 = digitalRead(modButton2);
+   //mod3 = digitalRead(modButton3);
 
-  Serial.print("X = ");
-  Serial.println(joyX);
-  Serial.print("Y = ");
-  Serial.println(joyY);
+  //Serial.print("X = ");
+  //Serial.println(joyX);
+  //Serial.print("Y = ");
+  //Serial.println(joyY);
   //Serial.print("Button = ");
   //Serial.println(joyB);
-  //Serial.print("Mod Button = ");
-  //Serial.println(mod);
+  //Serial.print("Mod Button 1 = ");
+  //Serial.println(mod1);
+  //Serial.print("Mod Button 2 = ");
+  //Serial.println(mod2);
+  //Serial.print("Mod Button 3 = ");
+  //Serial.println(mod3);
   //Serial.print("LED Button = ");
   //Serial.println(LEDON);
   //Serial.print("xHit: ");
@@ -122,10 +153,13 @@ unsigned long currentMillis = millis();
   //Serial.print("Time difference: ");
   //Serial.println(currentMillis - previousMillis);
 
-//JB();
-//WINGX();
-//WINGY();
+
+///////////////////////////////////////////////////// T E S T // C O D E ///////////////////////////////
+
 EYES();
+
+//////////////////////////////////////////// E N D // T E S T // C O D E ///////////////////////////////
+
 }
 
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||JOYSTICK FUNCTIONS|||||||||||||||||||||||||||||||||||||||||||||||
@@ -152,35 +186,60 @@ void JB(){
 void WINGX(){
 
 //Pressing left on the joystick moves the wings to the side, with granular control
-
-
-  mapX = map(joyX,0,1023,SERVOMIN,SERVOMAX);
-  // mapping the values of the Joystick to the min / max of the Servo
   
-//############################you may need to find a way to prevent this going past 90 degrees for hardware safety
+  joyX = multisample(joyXPin);
 
-  if (mapX <= 330){ // if the joystick goes left..
-    pwm.setPWM(wingMid,0,angleToPulse(mapX));
-    Serial.println("moving wings");
+// mapping the values of the Joystick to the min / max of the Servo
+  mapX = map(joyX,0,1023,SERVOMIN,SERVOMAX);
+  
+
+  xSmoothed = (mapX *0.05) + (xPrev * 0.95);
+  xPrev = xSmoothed;
+
+  if (debug){ // only shows text if debugging is on
+    Serial.print("mapX = ");
+    Serial.println(mapX);
+    delay(500);
+  }
+
+// this value needs to be just below the neutral position
+
+  if (joyX <= 490){ // if the joystick goes left..
+    pwm.setPWM(wingMid,0,angleToPulse(xSmoothed));
+    if (debug){ //only prints if debug is true
+      Serial.println("moving wings");
+    }
  }
 
 }
 //*************************************************************************************************************************************
 
-//******************************************************* X AXIS Right - WING UP / DOWN ***********************************************
+//******************************************************* JOYSTICK X AXIS RIGHT - TOGGLES WING UP/DOWN ********************************
 void WINGY(){
-
-// Pressing right on the joystick opens the wings, moving right a second time lowers them.
-
+  
   static bool wingsOpen = false;
   static bool joystickRight = false;
 
-  const unsigned long triggerThreshold = 355;
-  const unsigned long clearThreshold = 350;
+  const unsigned long triggerThreshold = 510;
+  const unsigned long clearThreshold = 490;
+
+  joyX = multisample(joyXPin);
 
   const unsigned long mapX = map(joyX,0,1023,SERVOMIN,SERVOMAX);
-
   const bool activate = !joystickRight && mapX >= triggerThreshold;
+
+if (debug){ // only shows text if debugging is on
+  Serial.print("mapX = ");
+  Serial.println(mapX);
+  Serial.print("wings Open = ");
+  Serial.println(wingsOpen);
+  Serial.print("Activate = ");
+  Serial.println(activate);
+  Serial.print("joystickRight = ");
+  Serial.println(joystickRight);
+  delay(500);
+}
+    
 
   if (activate){
     joystickRight = true;
@@ -188,10 +247,16 @@ void WINGY(){
     if (!wingsOpen){
       pwm.setPWM(wingLeft,0,angleToPulse(180));
       pwm.setPWM(wingRight,0,angleToPulse(180));
+      if (debug){ // only shows text if debugging is on
+        Serial.println("Wings Opened");
+      }
     }
     else {
       pwm.setPWM(wingLeft,0,angleToPulse(0));
       pwm.setPWM(wingRight,0,angleToPulse(0));
+      if (debug){ // only shows text if debugging is on
+        Serial.println("Wings Closeded");
+      }
     }
 
    wingsOpen = !wingsOpen;
@@ -201,9 +266,8 @@ void WINGY(){
   else if(joystickRight && mapX <= clearThreshold){
       joystickRight = false;
   }
+
 }
-
-
 
 //************************************************************** EYES **************************************************************
 // This is controlled by the joysticks ntural state. No mod buttons pressed
@@ -214,70 +278,57 @@ void EYES(){
    joyY = multisample(joyYPin);
    joyB = digitalRead(joySwPin);
    // manually mapping angles here seems to fix issue / doesn't pickup servomin/max???
-   mapX = map(joyX,0,1023,0,120);
+
+if (debug){ // only shows text if debugging is on
+  Serial.print("mapX = ");
+  Serial.println(mapX);
+  Serial.print("mapY = ");
+  Serial.println(mapY);
+  Serial.print("joyB = ");
+  Serial.println(joyB);
+  delay(500);
+}
+   
+   
+   mapX = map(joyX,0,1023,SERVOMIN,SERVOMAX);
    mapY = map(joyY,0,1023,SERVOMIN,SERVOMAX); 
 
-//HORIZONTAL MOVEMENT
-// centered (default position)
-if (mapX >=500 && mapX <= 510){
-  pwm.setPWM(rEyeX,0,angleToPulse(90));
-  pwm.setPWM(lEyeX,0,angleToPulse(90));
-}
-else {
-  // move with Joystick X
-  pwm.setPWM(rEyeX,0,angleToPulse(mapX));
-  pwm.setPWM(lEyeX,0,angleToPulse(mapX));
-}
+   xSmoothed = (mapX *0.05) + (xPrev * 0.95);
+   ySmoothed = (mapY *0.05) + (yPrev * 0.95);
 
-// VERTICAL MOVEMENT
-// centered (default position)
-if (mapY >= 500 && mapY <= 510){
-  pwm.setPWM(rEyeY,0,angleToPulse(90));
-  pwm.setPWM(lEyeY,0,angleToPulse(90));
-}
-else {
-  // move with Joystick Y
-  pwm.setPWM(rEyeY,0,angleToPulse(mapY));
-  pwm.setPWM(lEyeY,0,angleToPulse(mapY));
-}
+   xPrev = xSmoothed;
+   yPrev = ySmoothed;
+
+// Left Eye movement
+   pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)+90); // Left Right
+   pwm.setPWM(lEyeY,0,angleToPulse(ySmoothed)+90); // Up Down
+   
+ // Right Eye movement
+   pwm.setPWM(rEyeX,0,angleToPulse(xSmoothed)+90); // Left Right
+   pwm.setPWM(rEyeY,0,angleToPulse(ySmoothed)+90); // Up Down
+
+// individual eye movement
+   if (modButton1){ // if modeButton1 is held aka true
+      pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)+90); //Left and right
+      pwm.setPWM(lEyeY,0,angleToPulse(xSmoothed)+90); //Left and right
+   }
 
 // Manual Blink
-while (joyB == 0){
+while ((joyB) && (wake)){ // while both wake and joybutton state is true
   pwm.setPWM(rBlinkTop,0,angleToPulse(180));
   pwm.setPWM(lBlinkBot,0,angleToPulse(180));
   pwm.setPWM(rBlinkTop,0,angleToPulse(180));
   pwm.setPWM(lBlinkBot,0,angleToPulse(180));
   delay(200);
   
-  pwm.setPWM(rBlinkTop,0,angleToPulse(0));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(0));
-  pwm.setPWM(rBlinkTop,0,angleToPulse(0));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(0));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(135));
+  pwm.setPWM(lBlinkBot,0,angleToPulse(145));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(135));
+  pwm.setPWM(lBlinkBot,0,angleToPulse(145));
   delay(100); 
-}
+ }
 
 }
-//********************************************************* BLINK ***********************************************************************
-void blink() {
-  if(millis() - start >= timeout) {
-    start = millis();
- timeout = random(5000,15000); // between 5 - 15 seconds;
-  
-  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
-  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
-  delay(200);
-  
-  pwm.setPWM(rBlinkTop,0,angleToPulse(0));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(0));
-  pwm.setPWM(rBlinkTop,0,angleToPulse(0));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(0));
-  delay(100); 
-  }
-}
-
-
   
 int multisample(int pin) {
   int total = 0;
@@ -295,4 +346,89 @@ int angleToPulse(int ang){
   // Serial.print("Angle: ");Serial.print(ang);
 //   Serial.print(" pulse: ");Serial.println(pulse);
    return pulse;
+}
+
+void RISEANDSHINE(){
+  
+  //open
+  pwm.setPWM(lBlinkTop,0,angleToPulse(170));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(170));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(170));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(170));   
+  delay(200);
+    //open
+  pwm.setPWM(lBlinkTop,0,angleToPulse(160));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(160));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(160));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(160));   
+  delay(300);
+  //close
+  pwm.setPWM(lBlinkTop,0,angleToPulse(180));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(180));   
+  delay(900);
+  //open
+  pwm.setPWM(lBlinkTop,0,angleToPulse(160));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(160));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(160));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(160));    
+  delay(200);
+  //open
+  pwm.setPWM(lBlinkTop,0,angleToPulse(150));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(150));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(150));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(150));    
+  delay(300);
+  //close
+  pwm.setPWM(lBlinkTop,0,angleToPulse(180));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(180));   
+  delay(700);
+  //open
+  pwm.setPWM(lBlinkTop,0,angleToPulse(150));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(150));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(150));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(150));   
+  delay(600);
+   //open
+  pwm.setPWM(lBlinkTop,0,angleToPulse(155));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(155));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(155));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(155));   
+  delay(50);
+    //open wider
+  pwm.setPWM(lBlinkTop,0,angleToPulse(150));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(150));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(150));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(150));   
+  delay(300);
+   //close
+  pwm.setPWM(lBlinkTop,0,angleToPulse(180));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(180));    
+  delay(100);
+    //open wider
+  pwm.setPWM(lBlinkTop,0,angleToPulse(135));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(145));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(135));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(145));   
+  delay(300);
+}
+
+void BLINK(){
+  //left lids
+  pwm.setPWM(lBlinkTop,0,angleToPulse(180));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
+  //right lids
+  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
+  pwm.setPWM(rBlinkBot,0,angleToPulse(180));   
+  delay(50);
+  //open again
+  pwm.setPWM(lBlinkTop,0,angleToPulse(135));   
+  pwm.setPWM(lBlinkBot,0,angleToPulse(145));
+  pwm.setPWM(rBlinkTop,0,angleToPulse(135));   
+  pwm.setPWM(rBlinkBot,0,angleToPulse(145));
 }
