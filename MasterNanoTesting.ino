@@ -7,7 +7,7 @@
 
 // set to flase to stop serial output
 // make sure this is off so everything responds in realtime
-const bool debug = false;
+const bool debug = true;
 
 // Servo Controller 1 ---------------------
 int wingLeft = 0;
@@ -63,7 +63,7 @@ bool mod1 = false;
 bool mod2 = false;
 bool mod3 = false;
 bool yHit = false;
-
+bool blinking = false;
 
 
 //Joy X default home = 507
@@ -111,7 +111,7 @@ unsigned long currentMillis = millis();
 // Eyelids are closed on initiation, clicking push button once will open them..
 // get the joystick button State
 
-/*
+
 if (digitalRead(joySwPin)){ // on first press of thejoystick button
   if (wake = false){
     wake = !wake; //set wake to true /opposite of existing status
@@ -121,7 +121,7 @@ if (digitalRead(joySwPin)){ // on first press of thejoystick button
     BLINK();
   }
 }
-*/
+
 // checking the values several times and averaging for smoother results
 
    //joyX = multisample(joyXPin);
@@ -156,7 +156,7 @@ if (digitalRead(joySwPin)){ // on first press of thejoystick button
 
 ///////////////////////////////////////////////////// T E S T // C O D E ///////////////////////////////
 
-EYES();
+
 
 //////////////////////////////////////////// E N D // T E S T // C O D E ///////////////////////////////
 
@@ -167,20 +167,27 @@ EYES();
 //*************************************************JOYSTICK BUTTON PRESS***************************
 
 void JB(){
-
-  if (joyB == 0 && !LEDON){
-    //this will be for some sort of LED function
+   
+  joyB = digitalRead(joySwPin);
   
-    LEDON = true; //false is set at startup.
-      }
-  if (joyB == 1 && LEDON){
-    //This will stop the LEDS
+
+  if (debug){
+    Serial.print("Button = ");
+    Serial.println(joyB);
+    Serial.print("blinking = ");
+    Serial.println(blinking);
+  }
+  
+  if (joyB == 0 && !blinking){ // Button pressed first time only
+      blinking = true;
+      RISEANDSHINE();
+   }
     
-    LEDON = false;
-    
+  if (joyB == 0 && blinking){ // pressed but not first time
+    BLINK();
+  }
 }
 
-}
 
 //******************************************************* X AXIS LEFT - WING HORIZONTAL MOVEMENT *************************************
 void WINGX(){
@@ -276,59 +283,40 @@ void EYES(){
 
    joyX = multisample(joyXPin);
    joyY = multisample(joyYPin);
-   joyB = digitalRead(joySwPin);
-   // manually mapping angles here seems to fix issue / doesn't pickup servomin/max???
 
-if (debug){ // only shows text if debugging is on
-  Serial.print("mapX = ");
-  Serial.println(mapX);
-  Serial.print("mapY = ");
-  Serial.println(mapY);
-  Serial.print("joyB = ");
-  Serial.println(joyB);
-  delay(500);
-}
-   
-   
-   mapX = map(joyX,0,1023,SERVOMIN,SERVOMAX);
-   mapY = map(joyY,0,1023,SERVOMIN,SERVOMAX); 
+   // manually mapping angles here seems to fix issue / doesn't pickup servomin/max variable???
+   mapX = map(joyX,0,1023,0,100);
+   mapY = map(joyY,0,1023,0,100);
 
-   xSmoothed = (mapX *0.05) + (xPrev * 0.95);
-   ySmoothed = (mapY *0.05) + (yPrev * 0.95);
+// if too slow, mess with these rations (need to = 1 in total)
+   xSmoothed = (mapX *0.3) + (xPrev * 0.7);
+   ySmoothed = (mapY *0.3) + (yPrev * 0.7);
 
    xPrev = xSmoothed;
    yPrev = ySmoothed;
 
-// Left Eye movement
-   pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)+90); // Left Right
-   pwm.setPWM(lEyeY,0,angleToPulse(ySmoothed)+90); // Up Down
-   
- // Right Eye movement
-   pwm.setPWM(rEyeX,0,angleToPulse(xSmoothed)+90); // Left Right
-   pwm.setPWM(rEyeY,0,angleToPulse(ySmoothed)+90); // Up Down
+// Eye movement X
+  pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)); // Left Right
+  pwm.setPWM(rEyeX,0,angleToPulse(xSmoothed)); // Left Right
+// Eye movement Y
+  pwm.setPWM(lEyeY,0,angleToPulse(ySmoothed)); // Up Down
+  pwm.setPWM(rEyeY,0,angleToPulse(ySmoothed)); // Up Down
 
-// individual eye movement
+// individual eye movement LEFT Eye
    if (modButton1){ // if modeButton1 is held aka true
-      pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)+90); //Left and right
-      pwm.setPWM(lEyeY,0,angleToPulse(xSmoothed)+90); //Left and right
+      pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)); //Left and right
+      pwm.setPWM(lEyeY,0,angleToPulse(ySmoothed)); //Up and Down
    }
-
-// Manual Blink
-while ((joyB) && (wake)){ // while both wake and joybutton state is true
-  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
-  pwm.setPWM(rBlinkTop,0,angleToPulse(180));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(180));
-  delay(200);
-  
-  pwm.setPWM(rBlinkTop,0,angleToPulse(135));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(145));
-  pwm.setPWM(rBlinkTop,0,angleToPulse(135));
-  pwm.setPWM(lBlinkBot,0,angleToPulse(145));
-  delay(100); 
- }
+   
+// individual eye movement RIGHT Eye
+   if (modButton2){ // if modeButton1 is held aka true
+      pwm.setPWM(rEyeX,0,angleToPulse(xSmoothed)); //Left and right
+      pwm.setPWM(rEyeY,0,angleToPulse(ySmoothed)); //Up and Down
+   } 
 
 }
+
+
   
 int multisample(int pin) {
   int total = 0;
@@ -349,6 +337,10 @@ int angleToPulse(int ang){
 }
 
 void RISEANDSHINE(){
+
+  if (debug){
+    Serial.println("WAKING UP.........");
+  }
   
   //open
   pwm.setPWM(lBlinkTop,0,angleToPulse(170));   
@@ -419,6 +411,11 @@ void RISEANDSHINE(){
 }
 
 void BLINK(){
+
+if (debug){
+    Serial.println("Manual Blink");
+  }
+
   //left lids
   pwm.setPWM(lBlinkTop,0,angleToPulse(180));   
   pwm.setPWM(lBlinkBot,0,angleToPulse(180));
