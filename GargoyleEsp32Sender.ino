@@ -5,12 +5,11 @@ WiFiUDP udp;
 
 char packetBuffer[255];
 unsigned int localPort = 9999;
-char *serverip = "192.168.1.46";
+char *serverip = "192.168.1.80";
 unsigned int serverport = 8888;
 
-// CHANGE ME
-const char *ssid = "********";
-const char *password = "*************";
+const char *ssid = "REPLACE";
+const char *password = "REPLACE";
 
 #define xPin 13
 #define yPin 14
@@ -19,19 +18,13 @@ const char *password = "*************";
 #define mod2Pin 33
 #define mod3Pin 32
 
-int m1lastState = HIGH; // the previous state from the mod1 input pin
-int m1currentState;     // the current reading from the mod1 input pin
-int m2lastState = HIGH; // the previous state from the mod2 input pin
-int m2currentState;     // the current reading from the mod2 input pin
-int m3lastState = HIGH; // the previous state from the mod3 input pin
-int m3currentState;     // the current reading from the mod3 input pin
-
 int xPos;
 int yPos;
 bool jButton;
 bool mod1B;
 bool mod2B;
 bool mod3B;
+
 
 void setup() {
   Serial.begin(9600);
@@ -40,6 +33,7 @@ void setup() {
   pinMode(mod2Pin,INPUT_PULLUP);
   pinMode(mod3Pin,INPUT_PULLUP);
 
+/*
 // Connect to Wifi network.
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -47,10 +41,13 @@ void setup() {
   }
   udp.begin(localPort);
   Serial.printf("UDP Client : %s:%i \n", WiFi.localIP().toString().c_str(), localPort);
+*/
 }
 
+
 void loop() {
- 
+
+
   xPos = analogRead(xPin);
   yPos = analogRead(yPin);
   jButton = digitalRead(jbPin);
@@ -61,6 +58,13 @@ void loop() {
 //map the joystick position to an angle
   xPos = map(xPos,0,4095,0,180);
   yPos = map(yPos,0,4095,0,180);  
+
+Serial.println("Live Joystick Movement");
+Serial.print("X : ");
+Serial.println(xPos);
+Serial.print("Y : ");
+Serial.println(yPos);
+ 
 
  int packetSize = udp.parsePacket();
   if (packetSize) {
@@ -74,24 +78,12 @@ void loop() {
 // My variables
 String dataPacket = String(xPos)+","+String(yPos)+","+String(jButton)+","+String(mod1B)+","+String(mod2B)+","+String(mod3B);
 
+
   Serial.print("[Client Connected] "); Serial.println(WiFi.localIP());
-  udp.beginPacket(serverip, serverport);
-  udp.print(dataPacket);
-  udp.endPacket();
-
-/*
-  Serial.print("X Position : ");
-  Serial.println(xPos);
-  Serial.print("Y Position : ");
-  Serial.println(yPos);
-  Serial.print("Joystick Button Pressed? : ");
-  Serial.println(jButton);
-
-  Serial.print("Mod 1 Button Pressed? : ");
-  Serial.println(mod1B);
-  Serial.print("Mod 2 Button Pressed? : ");
-  Serial.println(mod2B);
-  Serial.print("Mod 3 Button Pressed? : ");
-  Serial.println(mod3B);
-*/
+  Serial.println(dataPacket);
+  delay(1000);
+//  udp.beginPacket(serverip, serverport);
+//  udp.print(dataPacket);
+//  udp.endPacket();
+  
 }
