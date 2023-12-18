@@ -78,23 +78,24 @@ def WIFI():
 
 ####################################### INITIALISE SERVOS
 def Startup():      
-    wingLeft.angle = 0
-    wingRight.angle = 0
-    wingMid.angle = 0
-    lEyeX.angle = 90
-    lEyeY.angle = 90
-    lLidTop.angle = 180
-    lLidBot.angle = 180
-    rEyeX.angle = 90
-    rEyeY.angle = 90
-    rLidTop.angle = 180
-    rLidBot.angle = 180
-    neck.angle = 90
-    servo12.angle = 0
-    servo13.angle = 0
-    servo14.angle = 0
-    servo15.angle = 0
-    time.sleep(0.03)
+	print(f"Initialising Servos")
+	wingLeft.angle = 0
+	wingRight.angle = 0
+	wingMid.angle = 0
+	lEyeX.angle = 90
+	lEyeY.angle = 90
+	lLidTop.angle = 180
+	lLidBot.angle = 180
+	rEyeX.angle = 90
+	rEyeY.angle = 90
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	neck.angle = 90
+	servo12.angle = 0
+	servo13.angle = 0
+	servo14.angle = 0
+	servo15.angle = 0
+	time.sleep(3)
 pca.deinit()
 
 
@@ -103,9 +104,9 @@ pca.deinit()
 def EyeMovement():
 	while True:
 		lEyeX.angle,rEyeX.angle = mapped_x
-		lEyeY.angle,LeyeY.angle = mapped_y	
-		pass
-
+		lEyeX.angle,lEyeY.angle = mapped_y	
+		sleep(0.3)
+		
 
 #-----------------------------------------------------------------------------------------------------------------
 
@@ -206,4 +207,9 @@ read_thread = threading.Thread(target=read_inputs)
 read_thread.start()
 
 print_inputs()
-#EyeMovement()
+
+eye_thread = threading.Thread(target=EyeMovement)
+eye_thread.start()
+
+
+
