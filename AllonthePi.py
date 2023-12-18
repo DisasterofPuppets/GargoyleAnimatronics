@@ -1,43 +1,33 @@
-import spidev
-from gpiozero import Button
-
-# Create an instance of the spidev SPI device (for the analog ADC)
-spi = spidev.SpiDev()
-spi.open(0, 0)
+from gpiozero import MCP3008, Button
+from time import sleep
 
 # Create an instance of the button
-button = Button(22, pull_up=True)
+button1 = Button(22, pull_up=True)
+button2 = Button(27, pull_up=True)
+button3 = Button(17, pull_up=True)
+button4 = Button(4, pull_up=True)
 
-# Main loop
+#create objects called that refer to MCP3008 channel 0 and 1
+c0 = MCP3008(0) #X-Axis
+c1 = MCP3008(1) #Y-Axis
+
+
+
 while True:
-    # Read the X-axis and Y-axis values from the MCP3008
-    x_value = spi.xfer2([0x01, 0x80, 0x00])[1] & 0x3F
-    y_value = spi.xfer2([0x01, 0xC0, 0x00])[1] & 0x3F
     
     # Read the button state
-    button_state = button.is_pressed
-    
+    button1_state = button1.is_pressed
+    button2_state = button2.is_pressed
+    button3_state = button3.is_pressed
+    button4_state = button4.is_pressed
+        
     # Print the values
-    print(f"X-axis: {x_value}, Y-axis: {y_value}, Button: {button_state}")
+    print(f"X: {c0.value}")
+    #print(f"Y: {c1.value}")
+    #print(f"YButton 1 : {button1_state}")
+    #print(f"YButton 2 : {button2_state}")
+    #print(f"YButton 3 : {button3_state}")
+    #print(f"YButton 4 : {button4_state}")
+    sleep(0.5)
 
-#MCP3008 wiring
-
-# 1 16
-# 2 15
-# 3 14
-# 4 13
-# 5 12
-# 6 11
-# 7 10
-# 8 09
-
-# Pin 16 VDD to Pi 3.3V
-# Pin 15 VRef to Pi 5V
-# Pin 14 AGND - Pi ground
-# Pin 13 SCLK - Pi GPIO11 (SCLK pin 23)
-# Pin 12 DOut - pi GPIO09 (MISO pin 21)
-# Pin 11 DIn - pi GPIO10 (MOSI pin 10)
-# Pin 10 CS/SHDN - Pi ground
-# Pin 09 DGND - Pi ground
-# Pin 01 X Joystick Output
-# Pin 02 Y Joystick Output
+   
