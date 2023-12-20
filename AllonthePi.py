@@ -1,6 +1,5 @@
 from gpiozero import MCP3008, Button
 import time
-from time import sleep
 import socket
 import board
 import busio
@@ -8,10 +7,28 @@ from adafruit_motor import servo
 from adafruit_pca9685 import PCA9685
 import threading
 
-
 i2c = busio.I2C(board.SCL, board.SDA)
 pca = PCA9685(i2c)
-pca.frequency = 50
+pca.frequency = 60
+
+#SERVOS
+#How did I come up ith these values? Retest?
+wingLeft = servo.Servo(pca.channels[0], min_pulse=400, max_pulse=2400)
+wingRight = servo.Servo(pca.channels[1], min_pulse=400, max_pulse=2400)
+wingMid = servo.Servo(pca.channels[2], min_pulse=400, max_pulse=2400)
+lEyeX = servo.Servo(pca.channels[3], min_pulse=400, max_pulse=2400)
+lEyeY = servo.Servo(pca.channels[4], min_pulse=400, max_pulse=2400)
+lLidTop = servo.Servo(pca.channels[5], min_pulse=400, max_pulse=2400)
+lLidBot = servo.Servo(pca.channels[6], min_pulse=400, max_pulse=2400)
+rEyeX = servo.Servo(pca.channels[7], min_pulse=400, max_pulse=2400)
+rEyeY = servo.Servo(pca.channels[8], min_pulse=400, max_pulse=2400)
+rLidTop = servo.Servo(pca.channels[9], min_pulse=400, max_pulse=2400)
+rLidBot = servo.Servo(pca.channels[10], min_pulse=400, max_pulse=2400)
+neck = servo.Servo(pca.channels[11], min_pulse=400, max_pulse=2400)
+servo12 = servo.Servo(pca.channels[12], min_pulse=400, max_pulse=2400)
+servo13 = servo.Servo(pca.channels[13], min_pulse=400, max_pulse=2400)
+servo14 = servo.Servo(pca.channels[14], min_pulse=400, max_pulse=2400)
+servo15 = servo.Servo(pca.channels[15], min_pulse=400, max_pulse=2400)
 
 # Create an instance of the button
 button1 = Button(22, pull_up=True)
@@ -36,26 +53,10 @@ button2_state = False
 button3_state = False
 button4_state = False
 
-#SERVOS
-wingLeft = servo.Servo(pca.channels[0], min_pulse=400, max_pulse=2400)
-wingRight = servo.Servo(pca.channels[1], min_pulse=400, max_pulse=2400)
-wingMid = servo.Servo(pca.channels[2], min_pulse=400, max_pulse=2400)
-lEyeX = servo.Servo(pca.channels[3], min_pulse=400, max_pulse=2400)
-lEyeY = servo.Servo(pca.channels[4], min_pulse=400, max_pulse=2400)
-lLidTop = servo.Servo(pca.channels[5], min_pulse=400, max_pulse=2400)
-lLidBot = servo.Servo(pca.channels[6], min_pulse=400, max_pulse=2400)
-rEyeX = servo.Servo(pca.channels[7], min_pulse=400, max_pulse=2400)
-rEyeY = servo.Servo(pca.channels[8], min_pulse=400, max_pulse=2400)
-rLidTop = servo.Servo(pca.channels[9], min_pulse=400, max_pulse=2400)
-rLidBot = servo.Servo(pca.channels[10], min_pulse=400, max_pulse=2400)
-neck = servo.Servo(pca.channels[11], min_pulse=400, max_pulse=2400)
-servo12 = servo.Servo(pca.channels[12], min_pulse=400, max_pulse=2400)
-servo13 = servo.Servo(pca.channels[13], min_pulse=400, max_pulse=2400)
-servo14 = servo.Servo(pca.channels[14], min_pulse=400, max_pulse=2400)
-servo15 = servo.Servo(pca.channels[15], min_pulse=400, max_pulse=2400)
+
 
 ################################### WIFI ##################################
-def WIFI():
+def wifi():
     while True:
         data = client_socket.recv(1024).decode()
         if data:
@@ -77,12 +78,12 @@ def WIFI():
 
 
 ####################################### INITIALISE SERVOS
-def Startup():      
+def startup():      
 	print(f"Initialising Servos")
 	wingLeft.angle = 0
 	wingRight.angle = 0
 	wingMid.angle = 0
-	lEyeX.angle = 90
+	lEyeX.angle = 0 #using for testing default is 90
 	lEyeY.angle = 90
 	lLidTop.angle = 180
 	lLidBot.angle = 180
@@ -95,17 +96,17 @@ def Startup():
 	servo13.angle = 0
 	servo14.angle = 0
 	servo15.angle = 0
-	time.sleep(3)
-pca.deinit()
-
-
+	time.sleep(1)
 
 ############################## EYE MOVEMENT########################
-def EyeMovement():
+def eyemovement():
+	global x_raw, y_raw, x_average, y_average, mapped_x, mapped_y, button1_state, button2_state, button3_state, button4_state
 	while True:
-		lEyeX.angle,rEyeX.angle = mapped_x
-		lEyeX.angle,lEyeY.angle = mapped_y	
-		sleep(0.3)
+		lEyeX.angle = mapped_x
+		rEyeX.angle = mapped_x
+		lEyeY.angle = mapped_y	
+		rEyeY.angle = mapped_y
+		time.sleep(0.3)
 		
 
 #-----------------------------------------------------------------------------------------------------------------
@@ -196,20 +197,33 @@ def print_inputs():
 			print(f"YButton 2 : {button2_state}")
 			print(f"YButton 3 : {button3_state}")
 			print(f"YButton 4 : {button4_state}")
-			sleep(0.10)
+			time.sleep(0.10)
 		except Exception as e:
 			print(f"Exception: {e}")
 
 #------------------------------------------------------------
-Startup()
 
+#180 servo sweep test
+
+def servotest():
+	print("Sweep from 0 to 180")
+	for i in range(180):
+		lEyeX.angle = i
+		time.sleep(0.01)
+	print("Sweep from 180 to 0")
+	for i in range(180):
+		lEyeX.angle = 180 - i
+		time.sleep(0.01)
+#------------------------------------------------------------
+
+#Threading
 read_thread = threading.Thread(target=read_inputs)
+print_thread = threading.Thread(target=print_inputs)
+eye_thread = threading.Thread(target=eyemovement)
+
+
+#Logic flow / main code
+startup()
 read_thread.start()
-
-print_inputs()
-
-eye_thread = threading.Thread(target=EyeMovement)
+print_thread.start()
 eye_thread.start()
-
-
-
