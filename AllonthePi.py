@@ -198,7 +198,7 @@ def print_inputs():
 			print(f"Button 2 : {button2_state}")
 			print(f"Button 3 : {button3_state}")
 			print(f"Button 4 : {button4_state}")
-			time.sleep(0.10)
+			time.sleep(0.5)
 		except Exception as e:
 			print(f"Exception: {e}")
 
@@ -207,14 +207,31 @@ def print_inputs():
 
 ###############################TO DO################################
 
-#------------------------------eyelids-----------------------------
+#-------------------------------wings-X-----------------------------
+
+#Wing X - We will need to re-map from 90 to 0 and have some previous state logic so position sticks
+
+def wingx(btn):
+	global x_raw, x_average, mapped_x, button1_state, button2_state, button3_state, button4_state
+	while True:
+		if mapped_x >= 0 and mapped_x <= 90:
+			wingMid.angle = mapped_x
+			time.sleep(.3)
+	
 
 #------------------------------------------------------------
 
-#wings
+#-------------------------------wings-Y----------------------------
 
-def wingMid():
-	time.sleep(.3)
+#Wing Y - 
+
+def wingy(btn):
+	global y_raw,y_average, mapped_y, button1_state, button2_state, button3_state, button4_state
+	while True:
+		if mapped_y >= 0 and mapped_y <= 90:
+			wingLeft.angle = mapped_y
+			wingRight.angle = mapped_y
+			time.sleep(.3)
 	
 
 #------------------------------------------------------------
@@ -330,11 +347,18 @@ def servotest():
 read_thread = threading.Thread(target=read_inputs)
 print_thread = threading.Thread(target=print_inputs)
 eye_thread = threading.Thread(target=eyemovement)
-random_blink = threading.Thread(target=randomblink)
+#random_blink = threading.Thread(target=randomblink)
+
 
 #Logic flow / main code
 startup()
 read_thread.start()
 print_thread.start()
 eye_thread.start()
-random_blink.start()
+#random_blink.start()
+
+#function of buttons when pressed
+#This will change substantially when we switch to serial input from the esp32
+button1.when_pressed = wingx
+button1.when_pressed = wingy
+
