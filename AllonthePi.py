@@ -1,3 +1,4 @@
+import random
 from gpiozero import MCP3008, Button
 import time
 import socket
@@ -186,17 +187,17 @@ def print_inputs():
 	while True:
 		try:
 			# Print the mapped values
-			print(f"X Raw: {x_raw}")
 			print(f"      ")
+			print(f"X Raw: {x_raw}")
 			print(f"Y Raw: {y_raw}")
 			print(f"X Average: {x_average}")
 			print(f"Y Mapped: {y_average}")
 			print(f"X Angle: {mapped_x}")
 			print(f"Y Angle: {mapped_y}")
-			print(f"YButton 1 : {button1_state}")
-			print(f"YButton 2 : {button2_state}")
-			print(f"YButton 3 : {button3_state}")
-			print(f"YButton 4 : {button4_state}")
+			print(f"Button 1 : {button1_state}")
+			print(f"Button 2 : {button2_state}")
+			print(f"Button 3 : {button3_state}")
+			print(f"Button 4 : {button4_state}")
 			time.sleep(0.10)
 		except Exception as e:
 			print(f"Exception: {e}")
@@ -206,13 +207,106 @@ def print_inputs():
 
 ###############################TO DO################################
 
-#eyelids
+#------------------------------eyelids-----------------------------
 
 #------------------------------------------------------------
 
 #wings
 
+def wingMid():
+	time.sleep(.3)
+	
+
 #------------------------------------------------------------
+
+#blink
+
+def blink():
+	global button1_state
+	print("Blinking....")
+	lLidTop.angle = 180
+	lLidBot.angle = 180
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	time.sleep(50 / 1000)
+	lLidTop.angle = 135
+	lLidBot.angle = 145
+	rLidTop.angle = 135
+	rLidBot.angle = 145
+	time.sleep(100 / 1000) #100 ms
+
+#------------------------------------------------------------
+#randomblink
+
+def randomblink():
+	while True:
+		print("Random")
+		time.sleep(random.randint(5, 12)) #seconds
+		blink()
+	time.sleep()
+
+#------------------------------------------------------------
+
+def wakeup():
+	print("Wake up")
+	lLidTop.angle = 170
+	lLidBot.angle = 170
+	rLidTop.angle = 170
+	rLidBot.angle = 170
+	time.sleep(200 / 1000)
+	lLidTop.angle = 160
+	lLidBot.angle = 160
+	rLidTop.angle = 160
+	rLidBot.angle = 160
+	time.sleep(300 / 1000)
+	lLidTop.angle = 180
+	lLidBot.angle = 180
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	time.sleep(900 / 1000)
+	lLidTop.angle = 160
+	lLidBot.angle = 160
+	rLidTop.angle = 160
+	rLidBot.angle = 160
+	time.sleep(200 / 1000)
+	lLidTop.angle = 150
+	lLidBot.angle = 150
+	rLidTop.angle = 150
+	rLidBot.angle = 150
+	time.sleep(300 / 1000)
+	lLidTop.angle = 180
+	lLidBot.angle = 180
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	time.sleep(700 / 1000)	
+	lLidTop.angle = 150
+	lLidBot.angle = 150
+	rLidTop.angle = 150
+	rLidBot.angle = 150
+	time.sleep(600 / 1000)
+	lLidTop.angle = 155
+	lLidBot.angle = 155
+	rLidTop.angle = 155
+	rLidBot.angle = 155
+	time.sleep(50 / 1000)
+	lLidTop.angle = 150
+	lLidBot.angle = 150
+	rLidTop.angle = 150
+	rLidBot.angle = 150
+	time.sleep(300 / 1000)
+	lLidTop.angle = 180
+	lLidBot.angle = 180
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	time.sleep(100 / 1000)
+	lLidTop.angle = 135
+	lLidBot.angle = 145
+	rLidTop.angle = 135
+	rLidBot.angle = 145
+	time.sleep(200 / 1000)
+	
+#------------------------------------------------------------
+
 
 #buttons
 
@@ -236,10 +330,11 @@ def servotest():
 read_thread = threading.Thread(target=read_inputs)
 print_thread = threading.Thread(target=print_inputs)
 eye_thread = threading.Thread(target=eyemovement)
-
+random_blink = threading.Thread(target=randomblink)
 
 #Logic flow / main code
 startup()
 read_thread.start()
 print_thread.start()
 eye_thread.start()
+random_blink.start()
