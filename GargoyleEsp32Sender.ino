@@ -1,15 +1,12 @@
-//DOIT ESP32 DEVKIT V1
 #include <WiFi.h>
 #include <WiFiUdp.h>
+
+const char *ssid = "SLOWKEVIN";
+const char *password = "FUKevin07";
+const char *raspberryPiIP = "192.168.1.80";
+const int raspberryPiPort = 8888;
+
 WiFiUDP udp;
-
-char packetBuffer[255];
-unsigned int localPort = 9999;
-char *serverip = "192.168.1.80";
-unsigned int serverport = 8888;
-
-const char *ssid = "REPLACE";
-const char *password = "REPLACE";
 
 #define xPin 13
 #define yPin 14
@@ -17,73 +14,50 @@ const char *password = "REPLACE";
 #define mod1Pin 25
 #define mod2Pin 33
 #define mod3Pin 32
+#define mod4Pin 11
 
-int xPos;
-int yPos;
-bool jButton;
-bool mod1B;
-bool mod2B;
-bool mod3B;
-
+int xpos;
+int ypos;
+int mod1b;
+int mod2b;
+int mod3b;
+int mod4b;
 
 void setup() {
-  Serial.begin(9600);
-  pinMode(jbPin,INPUT_PULLUP);
-  pinMode(mod1Pin,INPUT_PULLUP);
-  pinMode(mod2Pin,INPUT_PULLUP);
-  pinMode(mod3Pin,INPUT_PULLUP);
 
-/*
-// Connect to Wifi network.
+  
+  Serial.begin(115200);
+
+
+
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500); Serial.print(F("."));
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
   }
-  udp.begin(localPort);
-  Serial.printf("UDP Client : %s:%i \n", WiFi.localIP().toString().c_str(), localPort);
-*/
+  Serial.println("Connected to WiFi");
 }
-
 
 void loop() {
 
-
-  xPos = analogRead(xPin);
-  yPos = analogRead(yPin);
-  jButton = digitalRead(jbPin);
-  mod1B = digitalRead(mod1Pin);
-  mod2B = digitalRead(mod2Pin);
-  mod3B = digitalRead(mod3Pin);
+ // xpos = analogRead(xPin);
+  //ypos = analogRead(yPin);
+//  mod1b = digitalRead(mod1Pin);
+//  mod2b = digitalRead(mod2Pin);
+//  mod3b = digitalRead(mod3Pin);
+//  mod4b = digitalRead(mod4Pin);
 
 //map the joystick position to an angle
-  xPos = map(xPos,0,4095,0,180);
-  yPos = map(yPos,0,4095,0,180);  
+  //xpos = map(xpos,0,4095,0,180);
+  //ypos = map(ypos,0,4095,0,180); 
 
-Serial.println("Live Joystick Movement");
-Serial.print("X : ");
-Serial.println(xPos);
-Serial.print("Y : ");
-Serial.println(yPos);
- 
-
- int packetSize = udp.parsePacket();
-  if (packetSize) {
-    Serial.print(" Received packet from : "); Serial.println(udp.remoteIP());
-    int len = udp.read(packetBuffer, 255);
-    Serial.printf("Data : %s\n", packetBuffer);
-    Serial.println();
-  }
-  delay(500);
-
-// My variables
-String dataPacket = String(xPos)+","+String(yPos)+","+String(jButton)+","+String(mod1B)+","+String(mod2B)+","+String(mod3B);
+ // My variables
+String data = String(xpos)+","+String(ypos)+","+String(mod1b)+","+String(mod2b)+","+String(mod3b)+","+String(mod4b);
 
 
-  Serial.print("[Client Connected] "); Serial.println(WiFi.localIP());
-  Serial.println(dataPacket);
+  udp.beginPacket(raspberryPiIP, raspberryPiPort);
+  udp.print(data);
+  udp.endPacket();
+
   delay(1000);
-//  udp.beginPacket(serverip, serverport);
-//  udp.print(dataPacket);
-//  udp.endPacket();
-  
 }
