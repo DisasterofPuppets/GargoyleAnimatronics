@@ -13,11 +13,16 @@ WiFiUDP udp;
 #define mod2Pin 25
 #define mod3Pin 35
 #define mod4Pin 34
+#define xPin 39
+#define yPin 36
+
 
 int mod1b;
 int mod2b;
 int mod3b;
 int mod4b;
+int xpos;
+int ypos;
 
 
 void setup() {
@@ -46,11 +51,17 @@ void loop() {
   mod2b = digitalRead(mod2Pin);
   mod3b = digitalRead(mod3Pin);
   mod4b = digitalRead(mod4Pin);
+  xpos = analogRead(xPin);
+  ypos = analogRead(yPin);
 
 //map the joystick position to an angle
-  //xpos = map(xpos,0,4095,0,180);
-  //ypos = map(ypos,0,4095,0,180); 
+  xpos = map(xpos,0,4095,0,180);
+  ypos = map(ypos,0,4095,0,180); 
 
+Serial.print("X Pos : ");
+Serial.println(xpos);
+Serial.print("Y Pos : ");
+Serial.println(ypos);
 Serial.print("Button 1 : ");
 Serial.println(mod1b);
 Serial.print("Button 2 : ");
@@ -63,7 +74,7 @@ Serial.println(mod4b);
 
  // My variables
 //String data = String(xpos)+","+String(ypos)+","+String(mod1b)+","+String(mod2b)+","+String(mod3b)+","+String(mod4b);
-String data = String(mod1b)+","+String(mod2b)+","+String(mod3b)+","+String(mod4b);
+String data = String(xpos)+","+String(ypos)+","+String(mod1b)+","+String(mod2b)+","+String(mod3b)+","+String(mod4b);
 
   udp.beginPacket(raspberryPiIP, raspberryPiPort);
   udp.print(data);
