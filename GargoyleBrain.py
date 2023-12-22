@@ -43,16 +43,13 @@ yAxis = MCP3008(1) #Y-Axis
 
 #global variables
 
-x_raw = 0
-y_raw = 0
-x_average = 0
-y_average = 0
-mapped_x = 0
-mapped_y = 0
-button1_state = False
-button2_state = False
-button3_state = False
-button4_state = False
+xpos = 0
+ypos = 0
+mod1b = 0
+mod2b = 0
+mod3b = 0
+mod4b = 0
+
 
 #Parameters
 port=8888
@@ -67,11 +64,13 @@ sock.bind((host,port))
 
 ################################### SOCK DATA ##################################
 def sockread():
-    while True:
-        data = sock.recvfrom(1024)
-        print(f"Data received: {data}")           
-        #xPosition, yPosition, mod1B, mod2B, mod3B, mod4B = data.split(",")
-   
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	while True:
+		data, addr = sock.recvfrom(1024)
+		print(f"Data received: {data}")           
+		data_list = data.decode().split(',')
+		xpos, ypos, mod1b, mod2b, mod3b, mod4b = map(int,data_list)
+
 ####################################### INITIALISE SERVOS
 def startup():      
 	print(f"Initialising Servos")
@@ -95,12 +94,12 @@ def startup():
 
 ############################## EYE MOVEMENT########################
 def eyemovement():
-	global x_raw, y_raw, x_average, y_average, mapped_x, mapped_y, button1_state, button2_state, button3_state, button4_state
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	while True:
-		lEyeX.angle = mapped_x
-		rEyeX.angle = mapped_x
-		lEyeY.angle = mapped_y	
-		rEyeY.angle = mapped_y
+		lEyeX.angle = xpos
+		rEyeX.angle = xpos
+		lEyeY.angle = ypos
+		rEyeY.angle = ypos
 		time.sleep(0.3)
 		
 
@@ -109,22 +108,18 @@ def eyemovement():
 #------------------------------PRINT INPUT VALUES-----------
 
 def print_inputs():
-	global x_raw, y_raw, x_average, y_average, mapped_x, mapped_y, button1_state, button2_state, button3_state, button4_state
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	
 	while True:
 		try:
 			# Print the mapped values
 			print(f"      ")
-			print(f"X Raw: {x_raw}")
-			print(f"Y Raw: {y_raw}")
-			print(f"X Average: {x_average}")
-			print(f"Y Mapped: {y_average}")
-			print(f"X Angle: {mapped_x}")
-			print(f"Y Angle: {mapped_y}")
-			print(f"Button 1 : {button1_state}")
-			print(f"Button 2 : {button2_state}")
-			print(f"Button 3 : {button3_state}")
-			print(f"Button 4 : {button4_state}")
+			print(f"X Angle: {xpos}")
+			print(f"Y Angle: {ypos}")
+			print(f"Button 1 : {mod1b}")
+			print(f"Button 2 : {mod2b}")
+			print(f"Button 3 : {mod3b}")
+			print(f"Button 4 : {mod4b}")
 			time.sleep(0.5)
 		except Exception as e:
 			print(f"Exception: {e}")
@@ -139,7 +134,7 @@ def print_inputs():
 #Wing X - We will need to re-map from 90 to 0 and have some previous state logic so position sticks
 
 def wingx(btn):
-	global x_raw, x_average, mapped_x, button1_state, button2_state, button3_state, button4_state
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	while True:
 		if mapped_x >= 0 and mapped_x <= 90:
 			wingMid.angle = mapped_x
@@ -153,11 +148,11 @@ def wingx(btn):
 #Wing Y - 
 
 def wingy(btn):
-	global y_raw,y_average, mapped_y, button1_state, button2_state, button3_state, button4_state
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	while True:
-		if mapped_y >= 0 and mapped_y <= 90:
-			wingLeft.angle = mapped_y
-			wingRight.angle = mapped_y
+		if ypos >= 0 and ypos <= 90:
+			wingLeft.angle = ypos
+			wingRight.angle = ypos
 			time.sleep(.3)
 	
 
@@ -166,7 +161,7 @@ def wingy(btn):
 #blink
 
 def blink():
-	global button1_state
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	print("Blinking....")
 	lLidTop.angle = 180
 	lLidBot.angle = 180
@@ -183,6 +178,7 @@ def blink():
 #randomblink
 
 def randomblink():
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	while True:
 		print("Random")
 		time.sleep(random.randint(5, 12)) #seconds
@@ -192,6 +188,7 @@ def randomblink():
 #------------------------------------------------------------
 
 def wakeup():
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	print("Wake up")
 	lLidTop.angle = 170
 	lLidBot.angle = 170
@@ -271,19 +268,17 @@ def servotest():
 #------------------------------------------------------------
 
 #Threading
-sock_read = threading.Thread(target=sockread)
-#read_thread = threading.Thread(target=read_inputs)
-#print_thread = threading.Thread(target=print_inputs)
-eye_thread = threading.Thread(target=eyemovement)
+sock_thread = threading.Thread(target=sockread)
+print_thread = threading.Thread(target=print_inputs)
+#eye_thread = threading.Thread(target=eyemovement)
 #random_blink = threading.Thread(target=randomblink)
 
 
 #Logic flow / main code
 startup()
-sock_read.start()
-#read_thread.start()
-#print_thread.start()
-eye_thread.start()
+sock_thread.start()
+print_thread.start()
+#eye_thread.start()
 #random_blink.start()
 
 #function of buttons when pressed
