@@ -80,5 +80,5 @@ String data = String(xpos)+","+String(ypos)+","+String(mod1b)+","+String(mod2b)+
   udp.print(data);
   udp.endPacket();
 
-  delay(1000);
+  delay(100);
 }
