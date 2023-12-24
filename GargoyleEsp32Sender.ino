@@ -1,8 +1,8 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-const char *ssid = "SSID";
-const char *password = "PASS";
+const char *ssid = "SLOWKEVIN";
+const char *password = "FUKevin07";
 const char *raspberryPiIP = "192.168.1.80";
 const int raspberryPiPort = 8888;
 
