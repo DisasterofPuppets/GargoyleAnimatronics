@@ -38,6 +38,10 @@ button2 = Button(27, pull_up=True)
 button3 = Button(17, pull_up=True)
 button4 = Button(4, pull_up=True)
 
+#Servo fine tuning
+midMin = 82
+midMax = 20
+
 #create objects called that refer to MCP3008 channel 0 and 1
 xAxis = MCP3008(0) #X-Axis
 yAxis = MCP3008(1) #Y-Axis
@@ -77,7 +81,7 @@ def startup():
 	print(f"Initialising Servos")
 	wingLeft.angle = 90 #90 is closed, 0 is open
 	wingRight.angle = 90 #90 is closed, 0 
-	wingMid.angle = 82 #20 is open / 82 closed
+	wingMid.angle = midMin #20 is open / 82 closed
 	lEyeX.angle = 0 #using for testing default is 8
 	lEyeY.angle = 90
 	lLidTop.angle = 180
@@ -136,15 +140,28 @@ def print_inputs():
 #-------------------------------wings-X-----------------------------
 
 def wingx():
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	global xpos,ypos, mod1b
+	open_state = False
+	last_state = False
+	
 	while True:
 		if mod1b:
-			joystick_value = max(1,min(750, xpos))
-			# Map the joystick values to the desired angle range (20 to 90 degrees)
-			angle = 20 + (joystick_value / 750) * (82 - 20) #the desired angle - 20
-			print("Angle :", angle)
-			wingMid.angle = angle
-			time.sleep(.3)
+			if xpos >= 800:
+				open_state = True
+			elif xpos <= 600:
+				open_state = False
+				
+			if open_state != last_state:
+				if open_state:
+					print("Wing X : OPEN")
+					wingMid.angle = midMax
+					time.sleep(.3)
+				else:
+					print("Wing X : ClOSED")
+					wingMid.angle = midMin
+					time.sleep(.3)
+				
+				last_state = open_state
 		
 
 #------------------------------------------------------------
@@ -153,14 +170,31 @@ def wingx():
 
 #Wing Y - 
 
-def wingy(btn):
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
-	while True:
-		if ypos >= 0 and ypos <= 90:
-			wingLeft.angle = ypos
-			wingRight.angle = ypos
-			time.sleep(.3)
+def wingy():
+	global xpos, ypos, mod1b
+	open_state = False
+	last_state = False
 	
+	while True:
+		if mod1b:
+			if ypos >= 800:
+				open_state = True
+			elif ypos <= 600:
+				open_state = False
+				
+			if open_state != last_state:
+				if open_state:
+					print("Wings : OPEN")
+					wingLeft.angle = 0
+					wingRight.angle = 0
+					time.sleep(.3)
+				else:
+					print("Wings : ClOSED")
+					wingLeft.angle = 90
+					wingRight.angle = 90
+					time.sleep(.3)
+				
+				last_state = open_state
 
 #------------------------------------------------------------
 
@@ -289,6 +323,7 @@ def servotest():
 sock_thread = threading.Thread(target=sockread)
 print_thread = threading.Thread(target=print_inputs)
 wingx_thread = threading.Thread(target=wingx)
+wingy_thread = threading.Thread(target=wingy)
 #eye_thread = threading.Thread(target=eyemovement)
 #random_blink = threading.Thread(target=randomblink)
 
@@ -298,6 +333,7 @@ startup()
 sock_thread.start()
 print_thread.start()
 wingx_thread.start()
+wingy_thread.start()
 #eye_thread.start()
 #random_blink.start()
 
