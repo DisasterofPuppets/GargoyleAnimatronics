@@ -77,8 +77,8 @@ def startup():
 	print(f"Initialising Servos")
 	wingLeft.angle = 90 #90 is closed, 0 is open
 	wingRight.angle = 90 #90 is closed, 0 
-	wingMid.angle = 90 #20 is open / 90 closed
-	lEyeX.angle = 0 #using for testing default is 90
+	wingMid.angle = 82 #20 is open / 82 closed
+	lEyeX.angle = 0 #using for testing default is 8
 	lEyeY.angle = 90
 	lLidTop.angle = 180
 	lLidBot.angle = 180
@@ -138,10 +138,11 @@ def print_inputs():
 def wingx():
 	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	while True:
-		joystick_value = max(0,min(750, xpos))
-		angle = (joystick_value / 750) * 90
-		print("Angle :", angle)
-		if angle <= 90:
+		if mod1b:
+			joystick_value = max(1,min(750, xpos))
+			# Map the joystick values to the desired angle range (20 to 90 degrees)
+			angle = 20 + (joystick_value / 750) * (82 - 20) #the desired angle - 20
+			print("Angle :", angle)
 			wingMid.angle = angle
 			time.sleep(.3)
 		
@@ -299,3 +300,4 @@ print_thread.start()
 wingx_thread.start()
 #eye_thread.start()
 #random_blink.start()
+
