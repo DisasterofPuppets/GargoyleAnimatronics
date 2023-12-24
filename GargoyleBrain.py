@@ -310,8 +310,8 @@ def servotest():
 
 #ToDO LIST%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#Wings X 
-#*************Wing Y DONE
+#Wings X (change to button pushes and make flapping animation)
+#Wings Y (change to button pushes and make flapping animation)
 #Eyes X & Y
 #Blink
 #Random Blink
