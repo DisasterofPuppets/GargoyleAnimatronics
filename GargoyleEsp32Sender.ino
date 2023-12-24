@@ -17,10 +17,10 @@ WiFiUDP udp;
 #define yPin 36
 
 const int numSamples = 10;
-int mod1b;
-int mod2b;
-int mod3b;
-int mod4b;
+bool mod1b;
+bool mod2b;
+bool mod3b;
+bool mod4b;
 int xpos;
 int ypos;
 
@@ -46,19 +46,19 @@ void setup() {
 void loop() {
   
 
-  mod1b = digitalRead(mod1Pin);
-  mod2b = digitalRead(mod2Pin);
-  mod3b = digitalRead(mod3Pin);
-  mod4b = digitalRead(mod4Pin);
-  int xpos = multisample(xPin);
-  int ypos = multisample(yPin);
+  mod1b = debounce(mod1Pin);
+  mod2b = debounce(mod2Pin);
+  mod3b = debounce(mod3Pin);
+  mod4b = debounce(mod4Pin);
+  xpos = multisample(xPin);
+  ypos = multisample(yPin);
 
 
 
 
 //map the joystick position to an angle
-  xpos = map(xpos,0,4095,0,180);
-  ypos = map(ypos,0,4095,0,180); 
+  xpos = map(xpos,0,4095,0,1023);
+  ypos = map(ypos,0,4095,0,1023); 
 
 Serial.print("X Pos : ");
 Serial.println(xpos);
@@ -96,4 +96,17 @@ int multisample(int pin) {
   }
 
   return total / numSamples;
+}
+
+bool debounce(int pin) {
+  static int lastButtonState = HIGH;
+  int buttonState = digitalRead(pin);
+
+  if (buttonState != lastButtonState) {
+    delay(50); // Adjust this delay as needed
+    buttonState = digitalRead(pin);
+  }
+
+  lastButtonState = buttonState;
+  return buttonState == LOW;
 }
