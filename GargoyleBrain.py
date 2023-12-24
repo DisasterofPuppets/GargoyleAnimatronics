@@ -7,6 +7,7 @@ import busio
 from adafruit_motor import servo
 from adafruit_pca9685 import PCA9685
 import threading
+import math
 
 i2c = busio.I2C(board.SCL, board.SDA)
 pca = PCA9685(i2c)
@@ -45,10 +46,10 @@ yAxis = MCP3008(1) #Y-Axis
 
 xpos = 0
 ypos = 0
-mod1b = 0
-mod2b = 0
-mod3b = 0
-mod4b = 0
+mod1b = 1
+mod2b = 1
+mod3b = 1
+mod4b = 1
 
 
 #Parameters
@@ -67,16 +68,16 @@ def sockread():
 	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	while True:
 		data, addr = sock.recvfrom(1024)
-		print(f"Data received: {data}")           
+		#print(f"Data received: {data}")           
 		data_list = data.decode().split(',')
 		xpos, ypos, mod1b, mod2b, mod3b, mod4b = map(int,data_list)
 
 ####################################### INITIALISE SERVOS
 def startup():      
 	print(f"Initialising Servos")
-	wingLeft.angle = 0
-	wingRight.angle = 0
-	wingMid.angle = 0
+	wingLeft.angle = 90 #90 is closed, 0 is open
+	wingRight.angle = 90 #90 is closed, 0 
+	wingMid.angle = 90 #20 is open / 90 closed
 	lEyeX.angle = 0 #using for testing default is 90
 	lEyeY.angle = 90
 	lLidTop.angle = 180
@@ -91,6 +92,9 @@ def startup():
 	servo14.angle = 0
 	servo15.angle = 0
 	time.sleep(1)
+
+
+
 
 ############################## EYE MOVEMENT########################
 def eyemovement():
@@ -114,12 +118,12 @@ def print_inputs():
 		try:
 			# Print the mapped values
 			print(f"      ")
-			print(f"X Angle: {xpos}")
-			print(f"Y Angle: {ypos}")
-			print(f"Button 1 : {mod1b}")
-			print(f"Button 2 : {mod2b}")
-			print(f"Button 3 : {mod3b}")
-			print(f"Button 4 : {mod4b}")
+			print(f"X pos: {xpos}")
+			print(f"Y pos: {ypos}")
+			print(f"modb1 : {mod1b}")
+			print(f"modb2 : {mod2b}")
+			print(f"modb3 : {mod3b}")
+			print(f"modb4 : {mod4b}")
 			time.sleep(0.5)
 		except Exception as e:
 			print(f"Exception: {e}")
@@ -131,15 +135,16 @@ def print_inputs():
 
 #-------------------------------wings-X-----------------------------
 
-#Wing X - We will need to re-map from 90 to 0 and have some previous state logic so position sticks
-
-def wingx(btn):
+def wingx():
 	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
 	while True:
-		if mapped_x >= 0 and mapped_x <= 90:
-			wingMid.angle = mapped_x
+		joystick_value = max(0,min(750, xpos))
+		angle = (joystick_value / 750) * 90
+		print("Angle :", angle)
+		if angle <= 90:
+			wingMid.angle = angle
 			time.sleep(.3)
-	
+		
 
 #------------------------------------------------------------
 
@@ -267,9 +272,22 @@ def servotest():
 		time.sleep(0.01)
 #------------------------------------------------------------
 
+
+#ToDO LIST%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#Wings X 
+#*************Wing Y DONE
+#Eyes X & Y
+#Blink
+#Random Blink
+#Wake up
+#Neck
+#Button modifiers
+
 #Threading
 sock_thread = threading.Thread(target=sockread)
 print_thread = threading.Thread(target=print_inputs)
+wingx_thread = threading.Thread(target=wingx)
 #eye_thread = threading.Thread(target=eyemovement)
 #random_blink = threading.Thread(target=randomblink)
 
@@ -278,8 +296,6 @@ print_thread = threading.Thread(target=print_inputs)
 startup()
 sock_thread.start()
 print_thread.start()
+wingx_thread.start()
 #eye_thread.start()
 #random_blink.start()
-
-#function of buttons when pressed
-
