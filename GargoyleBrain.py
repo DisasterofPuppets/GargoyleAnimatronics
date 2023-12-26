@@ -1,5 +1,4 @@
 import random
-from gpiozero import MCP3008, Button
 import time
 import socket
 import board
@@ -32,28 +31,20 @@ servo13 = servo.Servo(pca.channels[13], min_pulse=400, max_pulse=2400)
 servo14 = servo.Servo(pca.channels[14], min_pulse=400, max_pulse=2400)
 servo15 = servo.Servo(pca.channels[15], min_pulse=400, max_pulse=2400)
 
-# Create an instance of the button
-button1 = Button(22, pull_up=True)
-button2 = Button(27, pull_up=True)
-button3 = Button(17, pull_up=True)
-button4 = Button(4, pull_up=True)
-
 #Servo fine tuning
 midMin = 82
 midMax = 20
-
-#create objects called that refer to MCP3008 channel 0 and 1
-xAxis = MCP3008(0) #X-Axis
-yAxis = MCP3008(1) #Y-Axis
 
 #global variables
 
 xpos = 0
 ypos = 0
-mod1b = 1
-mod2b = 1
-mod3b = 1
-mod4b = 1
+mod1 = 0
+mod2 = 0
+mod3 = 0
+mod4 = 0
+wingXToggle = False
+wingYToggle = False
 
 
 #Parameters
@@ -69,12 +60,12 @@ sock.bind((host,port))
 
 ################################### SOCK DATA ##################################
 def sockread():
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	global xpos, ypos, mod1, mod2, mod3, mod4
 	while True:
 		data, addr = sock.recvfrom(1024)
 		#print(f"Data received: {data}")           
 		data_list = data.decode().split(',')
-		xpos, ypos, mod1b, mod2b, mod3b, mod4b = map(int,data_list)
+		xpos, ypos, mod1, mod2, mod3, mod4 = map(int,data_list)
 
 ####################################### INITIALISE SERVOS
 def startup():      
@@ -116,7 +107,7 @@ def eyemovement():
 #------------------------------PRINT INPUT VALUES-----------
 
 def print_inputs():
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	global xpos, ypos, mod1, mod2, mod3, mod4
 	
 	while True:
 		try:
@@ -124,10 +115,10 @@ def print_inputs():
 			print(f"      ")
 			print(f"X pos: {xpos}")
 			print(f"Y pos: {ypos}")
-			print(f"modb1 : {mod1b}")
-			print(f"modb2 : {mod2b}")
-			print(f"modb3 : {mod3b}")
-			print(f"modb4 : {mod4b}")
+			print(f"mod1 : {mod1}")
+			print(f"mod2 : {mod2}")
+			print(f"mod3 : {mod3}")
+			print(f"mod4 : {mod4}")
 			time.sleep(0.5)
 		except Exception as e:
 			print(f"Exception: {e}")
@@ -140,29 +131,17 @@ def print_inputs():
 #-------------------------------wings-X-----------------------------
 
 def wingx():
-	global xpos,ypos, mod1b
-	open_state = False
-	last_state = False
-	
+	global wingXToggle, mod1
 	while True:
-		if mod1b:
-			if xpos >= 800:
-				open_state = True
-			elif xpos <= 600:
-				open_state = False
-				
-			if open_state != last_state:
-				if open_state:
-					print("Wing X : OPEN")
-					wingMid.angle = midMax
-					time.sleep(.3)
-				else:
-					print("Wing X : ClOSED")
-					wingMid.angle = midMin
-					time.sleep(.3)
-				
-				last_state = open_state
-		
+		if mod1:
+			if wingXToggle:
+				print(f"Mod1 Pressed")
+				wingMid.angle = midMax
+			else:
+				print(f"Closed")
+				wingMid.angle = midMin
+			time.sleep(1)
+			wingXToggle = not wingXToggle
 
 #------------------------------------------------------------
 
@@ -171,37 +150,29 @@ def wingx():
 #Wing Y - 
 
 def wingy():
-	global xpos, ypos, mod1b
-	open_state = False
-	last_state = False
-	
+	global wingYToggle, mod2
 	while True:
-		if mod1b:
-			if ypos >= 800:
-				open_state = True
-			elif ypos <= 600:
-				open_state = False
-				
-			if open_state != last_state:
-				if open_state:
-					print("Wings : OPEN")
-					wingLeft.angle = 0
-					wingRight.angle = 0
-					time.sleep(.3)
-				else:
-					print("Wings : ClOSED")
-					wingLeft.angle = 90
-					wingRight.angle = 90
-					time.sleep(.3)
-				
-				last_state = open_state
+		if mod2:
+			if wingYToggle:
+				print(f"Open")
+				wingLeft.angle = 0
+				wingRight.angle = 0
+			else:
+				print(f"Closed")
+				wingLeft.angle = 90
+				wingRight.angle = 90
+		time.sleep(1)
+		wingYToggle = not wingYToggle
+
+
+
 
 #------------------------------------------------------------
 
 #blink
 
 def blink():
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	global xpos, ypos, mod1, mod2, mod3, mod4
 	print("Blinking....")
 	lLidTop.angle = 180
 	lLidBot.angle = 180
@@ -218,7 +189,7 @@ def blink():
 #randomblink
 
 def randomblink():
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	global xpos, ypos, mod1, mod2, mod3, mod4
 	while True:
 		print("Random")
 		time.sleep(random.randint(5, 12)) #seconds
@@ -228,7 +199,7 @@ def randomblink():
 #------------------------------------------------------------
 
 def wakeup():
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	global xpos, ypos, mod1, mod2, mod3, mod4
 	print("Wake up")
 	lLidTop.angle = 170
 	lLidBot.angle = 170
@@ -306,7 +277,6 @@ def servotest():
 		lEyeX.angle = 180 - i
 		time.sleep(0.01)
 #------------------------------------------------------------
-
 
 #ToDO LIST%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
