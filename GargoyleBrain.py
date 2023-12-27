@@ -13,23 +13,23 @@ pca = PCA9685(i2c)
 pca.frequency = 50
 
 #SERVOS
-#How did I come up ith these values? Retest?
-wingLeft = servo.Servo(pca.channels[0], min_pulse=400, max_pulse=2400)
-wingRight = servo.Servo(pca.channels[1], min_pulse=400, max_pulse=2400)
-wingMid = servo.Servo(pca.channels[2], min_pulse=400, max_pulse=2400)
-lEyeX = servo.Servo(pca.channels[3], min_pulse=400, max_pulse=2400)
-lEyeY = servo.Servo(pca.channels[4], min_pulse=400, max_pulse=2400)
-lLidTop = servo.Servo(pca.channels[5], min_pulse=400, max_pulse=2400)
-lLidBot = servo.Servo(pca.channels[6], min_pulse=400, max_pulse=2400)
-rEyeX = servo.Servo(pca.channels[7], min_pulse=400, max_pulse=2400)
-rEyeY = servo.Servo(pca.channels[8], min_pulse=400, max_pulse=2400)
-rLidTop = servo.Servo(pca.channels[9], min_pulse=400, max_pulse=2400)
-rLidBot = servo.Servo(pca.channels[10], min_pulse=400, max_pulse=2400)
-neck = servo.Servo(pca.channels[11], min_pulse=400, max_pulse=2400)
-servo12 = servo.Servo(pca.channels[12], min_pulse=400, max_pulse=2400)
-servo13 = servo.Servo(pca.channels[13], min_pulse=400, max_pulse=2400)
-servo14 = servo.Servo(pca.channels[14], min_pulse=400, max_pulse=2400)
-servo15 = servo.Servo(pca.channels[15], min_pulse=400, max_pulse=2400)
+#PW based on motor specs sheets
+wingLeft = servo.Servo(pca.channels[0], min_pulse=500, max_pulse=2500) #DS3240 Servo
+wingRight = servo.Servo(pca.channels[1], min_pulse=500, max_pulse=2500) #DS3240 Servo
+wingMid = servo.Servo(pca.channels[2], min_pulse=500, max_pulse=2500) #MG996R Serov
+lEyeX = servo.Servo(pca.channels[3], min_pulse=500, max_pulse=2500) #MG996R Serov
+lEyeY = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2500) #MG996R Serov
+lLidTop = servo.Servo(pca.channels[5], min_pulse=500, max_pulse=2500) #MG996R Serov
+lLidBot = servo.Servo(pca.channels[6], min_pulse=500, max_pulse=2500) #MG996R Serov
+rEyeX = servo.Servo(pca.channels[7], min_pulse=500, max_pulse=2500) #MG996R Serov
+rEyeY = servo.Servo(pca.channels[8], min_pulse=500, max_pulse=2500) #MG996R Serov
+rLidTop = servo.Servo(pca.channels[9], min_pulse=500, max_pulse=2500) #MG996R Serov
+rLidBot = servo.Servo(pca.channels[10], min_pulse=500, max_pulse=2500) #MG996R Serov
+neck = servo.Servo(pca.channels[11], min_pulse=500, max_pulse=2500) #MG996R Serov
+servo12 = servo.Servo(pca.channels[12], min_pulse=500, max_pulse=2500) #MG996R Serov
+servo13 = servo.Servo(pca.channels[13], min_pulse=500, max_pulse=2500) #MG996R Serov
+servo14 = servo.Servo(pca.channels[14], min_pulse=500, max_pulse=2500) #MG996R Serov
+servo15 = servo.Servo(pca.channels[15], min_pulse=500, max_pulse=2500) #MG996R Serov
 
 #Servo fine tuning
 midMin = 82
@@ -302,6 +302,7 @@ def servotest():
 
 #ToDO LIST%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+#HTML based Serv config page ...read values from .txt / html
 #Wings X ******DONE
 #Wings Y ******DONE
 #wing flap / stretch animations
