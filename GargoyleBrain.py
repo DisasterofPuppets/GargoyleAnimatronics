@@ -10,7 +10,7 @@ import math
 
 i2c = busio.I2C(board.SCL, board.SDA)
 pca = PCA9685(i2c)
-pca.frequency = 60
+pca.frequency = 50
 
 #SERVOS
 #How did I come up ith these values? Retest?
@@ -34,6 +34,16 @@ servo15 = servo.Servo(pca.channels[15], min_pulse=400, max_pulse=2400)
 #Servo fine tuning
 midMin = 82
 midMax = 20
+LexMin = 0
+LexMax = 80
+LeyMin = 65
+LeyMax = 120
+RexMin = 0
+ReyMax = 0
+LlidTMin = 90
+LlidTMax = 180
+LlidBMin = 90
+LlidBMax = 180
 
 #global variables
 
@@ -70,13 +80,14 @@ def sockread():
 ####################################### INITIALISE SERVOS
 def startup():      
 	print(f"Initialising Servos")
+	#REPLACE THESE VALUES WITH THE MIN MAX VARABLES^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 	wingLeft.angle = 90 #90 is closed, 0 is open
 	wingRight.angle = 90 #90 is closed, 0 
 	wingMid.angle = midMin #20 is open / 82 closed
-	lEyeX.angle = 0 #using for testing default is 8
-	lEyeY.angle = 90
-	lLidTop.angle = 180
-	lLidBot.angle = 180
+	lEyeX.angle = (LexMin + LexMax) / 2 #40 is middle,0 right, 80 left
+	lEyeY.angle = (LeyMin + LeyMax) / 2 #90 is middle, 120 top, 65 bottom
+	lLidTop.angle = 90#LlidTMax #180 is closed, 90 open
+	lLidBot.angle = 90#LlidBMax #180 is closed, 90 open
 	rEyeX.angle = 90
 	rEyeY.angle = 90
 	rLidTop.angle = 180
@@ -93,12 +104,23 @@ def startup():
 
 ############################## EYE MOVEMENT########################
 def eyemovement():
-	global xpos, ypos, mod1b, mod2b, mod3b, mod4b
+	global xpos, ypos, mod1b, mod2b, mod3b, mod4b,LexMin,LexMax,LeyMin,LeyMax,RexMin,ReyMax,LlidTMin,LlidTMax,LlidBMin,LlidBMax
+	
 	while True:
-		lEyeX.angle = xpos
-		rEyeX.angle = xpos
-		lEyeY.angle = ypos
-		rEyeY.angle = ypos
+		#Map Left Eye X
+		
+		#####THIS IS NOT MAPPING WITH 40 degress as the centre.........................
+		scaled_input = xpos / 1023
+		mapped_angle = scaled_input * LexMax #angle range
+		Lxpos = mapped_angle + LexMin #starting angle
+		#Map Left Eye Y
+		#Map Left Top Lid
+		#Map Left Bot Lid
+		print(f"Left X Mapped Angle: ", Lxpos)
+		lEyeX.angle = Lxpos
+		#rEyeX.angle = Lxpos
+		#lEyeY.angle = Lxpos
+		#rEyeY.angle = Lxpos
 		time.sleep(0.3)
 		
 
@@ -280,8 +302,9 @@ def servotest():
 
 #ToDO LIST%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#Wings X (change to button pushes and make flapping animation)
-#Wings Y (change to button pushes and make flapping animation)
+#Wings X ******DONE
+#Wings Y ******DONE
+#wing flap / stretch animations
 #Eyes X & Y
 #Blink
 #Random Blink
@@ -294,7 +317,7 @@ sock_thread = threading.Thread(target=sockread)
 print_thread = threading.Thread(target=print_inputs)
 wingx_thread = threading.Thread(target=wingx)
 wingy_thread = threading.Thread(target=wingy)
-#eye_thread = threading.Thread(target=eyemovement)
+eye_thread = threading.Thread(target=eyemovement)
 #random_blink = threading.Thread(target=randomblink)
 
 
@@ -304,6 +327,6 @@ sock_thread.start()
 print_thread.start()
 wingx_thread.start()
 wingy_thread.start()
-#eye_thread.start()
+eye_thread.start()
 #random_blink.start()
 
