@@ -1,26 +1,26 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-const char *ssid = "SLOWKEVIN";
-const char *password = "FUKevin07";
+const char *ssid = "WIFIIDHERE";
+const char *password = "PASSHERE";
 const char *raspberryPiIP = "192.168.1.80";
 const int raspberryPiPort = 8888;
 
 WiFiUDP udp;
 
 
-#define mod1Pin 26
-#define mod2Pin 25
-#define mod3Pin 35
-#define mod4Pin 34
+#define mod1Pin 27
+#define mod2Pin 26
+#define mod3Pin 25
+#define mod4Pin 35
 #define xPin 39
 #define yPin 36
 
 const int numSamples = 10;
-bool mod1b;
-bool mod2b;
-bool mod3b;
-bool mod4b;
+bool mod1;
+bool mod2;
+bool mod3;
+bool mod4;
 int xpos;
 int ypos;
 
@@ -46,10 +46,10 @@ void setup() {
 void loop() {
   
 
-  mod1b = debounce(mod1Pin);
-  mod2b = debounce(mod2Pin);
-  mod3b = debounce(mod3Pin);
-  mod4b = debounce(mod4Pin);
+  mod1 = debounce(mod1Pin);
+  mod2 = debounce(mod2Pin);
+  mod3 = debounce(mod3Pin);
+  mod4 = debounce(mod4Pin);
   xpos = multisample(xPin);
   ypos = multisample(yPin);
 
@@ -65,18 +65,17 @@ Serial.println(xpos);
 Serial.print("Y Pos : ");
 Serial.println(ypos);
 Serial.print("Button 1 : ");
-Serial.println(mod1b);
+Serial.println(mod1);
 Serial.print("Button 2 : ");
-Serial.println(mod2b);
+Serial.println(mod2);
 Serial.print("Button 3 : ");
-Serial.println(mod3b);
+Serial.println(mod3);
 Serial.print("Button 4 : ");
-Serial.println(mod4b);
+Serial.println(mod4);
 
 
  // My variables
-//String data = String(xpos)+","+String(ypos)+","+String(mod1b)+","+String(mod2b)+","+String(mod3b)+","+String(mod4b);
-String data = String(xpos)+","+String(ypos)+","+String(mod1b)+","+String(mod2b)+","+String(mod3b)+","+String(mod4b);
+String data = String(xpos)+","+String(ypos)+","+String(mod1)+","+String(mod2)+","+String(mod3)+","+String(mod4);
 
 Serial.println(data);
 
