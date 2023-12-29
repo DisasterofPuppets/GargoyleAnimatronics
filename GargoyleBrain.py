@@ -46,7 +46,7 @@ LlidBMin = 90
 LlidBMax = 180
 
 #global variables
-
+runOnce = 0
 xpos = 0
 ypos = 0
 mod1 = 0
@@ -80,7 +80,7 @@ def sockread():
 ####################################### INITIALISE SERVOS
 def startup():      
 	print(f"Initialising Servos")
-	#REPLACE THESE VALUES WITH THE MIN MAX VARABLES^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	#REPLACE THESE VALUES WITH THE MIN MAX VARABLES^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^OR use html config...to be coded
 	wingLeft.angle = 90 #90 is closed, 0 is open
 	wingRight.angle = 90 #90 is closed, 0 
 	wingMid.angle = midMin #20 is open / 82 closed
@@ -141,6 +141,7 @@ def print_inputs():
 			print(f"mod2 : {mod2}")
 			print(f"mod3 : {mod3}")
 			print(f"mod4 : {mod4}")
+			print(f"Run Once? : {runOnce}")
 			time.sleep(0.5)
 		except Exception as e:
 			print(f"Exception: {e}")
@@ -167,12 +168,19 @@ def wingx():
 
 #------------------------------------------------------------
 
+def buttonManager():
+	global runOnce, mod1, mod2, mod3, mod4
+	while not runOnce:  # is false
+		print(f"No buttons pressed yet")
+		if mod1 or mod2 or mod3 or mod4: #are True
+			runOnce = 1
+					
 #-------------------------------wings-Y----------------------------
 
 #Wing Y - 
 
 def wingy():
-	global wingYToggle, mod2
+	global wingYToggle, mod2, runOnce
 	while True:
 		if mod2:
 			if wingYToggle:
@@ -315,6 +323,7 @@ def servotest():
 
 #Threading
 sock_thread = threading.Thread(target=sockread)
+bttn_thread = threading.Thread(target=buttonManager)
 print_thread = threading.Thread(target=print_inputs)
 wingx_thread = threading.Thread(target=wingx)
 wingy_thread = threading.Thread(target=wingy)
@@ -325,8 +334,10 @@ eye_thread = threading.Thread(target=eyemovement)
 #Logic flow / main code
 startup()
 sock_thread.start()
+bttn_thread.start()
 print_thread.start()
 wingx_thread.start()
 wingy_thread.start()
 eye_thread.start()
 #random_blink.start()
+
