@@ -1,20 +1,26 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <FastLED.h>
 
-const char *ssid = "WIFIIDHERE";
-const char *password = "PASSHERE";
+const char *ssid = "SLOWKEVIN";
+const char *password = "FUKevin07";
 const char *raspberryPiIP = "192.168.1.80";
 const int raspberryPiPort = 8888;
 
 WiFiUDP udp;
 
-
 #define mod1Pin 27
 #define mod2Pin 26
 #define mod3Pin 25
-#define mod4Pin 35
+#define mod4Pin 33
+#define LEDPin 32
 #define xPin 39
 #define yPin 36
+#define COLOR_ORDER GRB
+#define CHIPSET     WS2812
+#define NUM_LEDS 4
+bool gReverseDirection = false;
+CRGB leds[NUM_LEDS];
 
 const int numSamples = 10;
 bool mod1;
@@ -25,13 +31,35 @@ int xpos;
 int ypos;
 
 
+void selectedLED(void * parameters){
+  for(;;){
+
+  LEDCheck(mod1Pin,0);
+  LEDCheck(mod2Pin,1);
+  LEDCheck(mod3Pin,2);
+  LEDCheck(mod4Pin,3);
+  
+  }
+}
+
 void setup() {
+
+xTaskCreate(
+  selectedLED,     // function name
+  "selectedLED",  // task name
+  1000,           // stack size
+  NULL,           // task parameters
+  1,              // priority (lower number = higher priority)
+  NULL            // task handle
+);
+
+FastLED.addLeds<CHIPSET, LEDPin, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+randomSeed(analogRead(0)); // Initialize random seed
   
   pinMode(mod1Pin,INPUT_PULLUP);
   pinMode(mod2Pin,INPUT_PULLUP);
   pinMode(mod3Pin,INPUT_PULLUP);
   pinMode(mod4Pin,INPUT_PULLUP);
-
   
   Serial.begin(9600);
 
@@ -42,6 +70,22 @@ void setup() {
   }
   Serial.println("Connected to WiFi");
 }
+
+void LEDCheck(int PIN, int LED){
+
+    if (digitalRead(PIN) == 0){
+      leds[LED] = CRGB::Red;
+         FastLED.show();
+    }
+    else if (digitalRead(PIN) != 0){
+      leds[LED] = CRGB::Black;
+         FastLED.show();
+
+  }
+  
+}
+
+
 
 void loop() {
   
