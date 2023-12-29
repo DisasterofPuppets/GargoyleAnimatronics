@@ -2,8 +2,8 @@
 #include <WiFiUdp.h>
 #include <FastLED.h>
 
-const char *ssid = "SLOWKEVIN";
-const char *password = "FUKevin07";
+const char *ssid = "SSID";
+const char *password = "SSPASS";
 const char *raspberryPiIP = "192.168.1.80";
 const int raspberryPiPort = 8888;
 
@@ -53,6 +53,8 @@ xTaskCreate(
   NULL            // task handle
 );
 
+
+
 FastLED.addLeds<CHIPSET, LEDPin, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
 randomSeed(analogRead(0)); // Initialize random seed
   
@@ -88,7 +90,8 @@ void LEDCheck(int PIN, int LED){
 
 
 void loop() {
-  
+ Serial.print("Free Heap: ");
+ Serial.println(ESP.getFreeHeap());
 
   mod1 = debounce(mod1Pin);
   mod2 = debounce(mod2Pin);
@@ -126,6 +129,10 @@ Serial.println(data);
   udp.beginPacket(raspberryPiIP, raspberryPiPort);
   udp.print(data);
   udp.endPacket();
+
+if (udp.endPacket() == 0) {
+  Serial.println("Error sending UDP packet");
+}
 
   delay(100);
 }
