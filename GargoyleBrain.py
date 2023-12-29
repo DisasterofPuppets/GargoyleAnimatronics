@@ -330,4 +330,3 @@ wingx_thread.start()
 wingy_thread.start()
 eye_thread.start()
 #random_blink.start()
-
