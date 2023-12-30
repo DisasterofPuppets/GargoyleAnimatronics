@@ -46,7 +46,6 @@ LlidBMin = 90
 LlidBMax = 180
 
 #global variables
-runOnce = 0
 xpos = 0
 ypos = 0
 mod1 = 0
@@ -141,7 +140,6 @@ def print_inputs():
 			print(f"mod2 : {mod2}")
 			print(f"mod3 : {mod3}")
 			print(f"mod4 : {mod4}")
-			print(f"Run Once? : {runOnce}")
 			time.sleep(0.5)
 		except Exception as e:
 			print(f"Exception: {e}")
@@ -167,14 +165,7 @@ def wingx():
 			wingXToggle = not wingXToggle
 
 #------------------------------------------------------------
-
-def buttonManager():
-	global runOnce, mod1, mod2, mod3, mod4
-	while not runOnce:  # is false
-		print(f"No buttons pressed yet")
-		if mod1 or mod2 or mod3 or mod4: #are True
-			runOnce = 1
-					
+				
 #-------------------------------wings-Y----------------------------
 
 #Wing Y - 
@@ -323,7 +314,6 @@ def servotest():
 
 #Threading
 sock_thread = threading.Thread(target=sockread)
-bttn_thread = threading.Thread(target=buttonManager)
 print_thread = threading.Thread(target=print_inputs)
 wingx_thread = threading.Thread(target=wingx)
 wingy_thread = threading.Thread(target=wingy)
@@ -334,7 +324,6 @@ eye_thread = threading.Thread(target=eyemovement)
 #Logic flow / main code
 startup()
 sock_thread.start()
-bttn_thread.start()
 print_thread.start()
 wingx_thread.start()
 wingy_thread.start()
