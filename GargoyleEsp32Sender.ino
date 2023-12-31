@@ -2,8 +2,8 @@
 #include <WiFiUdp.h>
 #include <FastLED.h>
 
-const char *ssid = "SSID";
-const char *password = "SSPASS";
+const char *ssid = "SLOWKEVIN";
+const char *password = "FUKevin07";
 const char *raspberryPiIP = "192.168.1.80";
 const int raspberryPiPort = 8888;
 
@@ -29,40 +29,14 @@ bool mod3;
 bool mod4;
 int xpos;
 int ypos;
+bool mod1Toggle;
+bool mod2Toggle;
+bool mod3Toggle;
+bool mod4Toggle;
 
 
-void selectedLED(void * parameters){
-  for(;;){
-
-  LEDCheck(mod1Pin,0);
-  LEDCheck(mod2Pin,1);
-  LEDCheck(mod3Pin,2);
-  LEDCheck(mod4Pin,3);
-  
-  }
-}
 
 void setup() {
-
-xTaskCreate(
-  selectedLED,     // function name
-  "selectedLED",  // task name
-  1000,           // stack size
-  NULL,           // task parameters
-  1,              // priority (lower number = higher priority)
-  NULL            // task handle
-);
-
-
-
-FastLED.addLeds<CHIPSET, LEDPin, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-randomSeed(analogRead(0)); // Initialize random seed
-  
-  pinMode(mod1Pin,INPUT_PULLUP);
-  pinMode(mod2Pin,INPUT_PULLUP);
-  pinMode(mod3Pin,INPUT_PULLUP);
-  pinMode(mod4Pin,INPUT_PULLUP);
-  
   Serial.begin(9600);
 
   WiFi.begin(ssid, password);
@@ -71,58 +45,102 @@ randomSeed(analogRead(0)); // Initialize random seed
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
-}
 
-void LEDCheck(int PIN, int LED){
-
-    if (digitalRead(PIN) == 0){
-      leds[LED] = CRGB::Red;
-         FastLED.show();
-    }
-    else if (digitalRead(PIN) != 0){
-      leds[LED] = CRGB::Black;
-         FastLED.show();
-
-  }
+  FastLED.addLeds<CHIPSET, LEDPin, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  randomSeed(analogRead(0)); // Initialize random seed
   
+  pinMode(mod1Pin,INPUT_PULLUP);
+  pinMode(mod2Pin,INPUT_PULLUP);
+  pinMode(mod3Pin,INPUT_PULLUP);
+  pinMode(mod4Pin,INPUT_PULLUP);
+
 }
 
 
 
 void loop() {
- Serial.print("Free Heap: ");
- Serial.println(ESP.getFreeHeap());
 
-  mod1 = debounce(mod1Pin);
-  mod2 = debounce(mod2Pin);
-  mod3 = debounce(mod3Pin);
-  mod4 = debounce(mod4Pin);
+  mod1 = digitalRead(mod1Pin);
+  mod2 = digitalRead(mod2Pin);
+  mod3 = digitalRead(mod3Pin);
+  mod4 = digitalRead(mod4Pin);
   xpos = multisample(xPin);
   ypos = multisample(yPin);
-
-
 
 
 //map the joystick position to an angle
   xpos = map(xpos,0,4095,0,1023);
   ypos = map(ypos,0,4095,0,1023); 
 
+// set the buton toggles off or on.
+// MAKE THIS A FUNCTION  
+
+  if (mod1 == false and mod1Toggle == false){ // for some reason my Pin buttons are reversed...
+      Serial.println("Button state changed to ON");
+      mod1Toggle = true;
+  }
+  else if (mod1Toggle == true){
+      Serial.println("Button state changed to OFF");
+      mod1Toggle = false;
+  }
+  else {
+   // do nothing.
+  }
+  
+ if (mod2 == false and mod2Toggle == false){ // for some reason my Pin buttons are reversed...
+      Serial.println("Button state changed to ON");
+      mod2Toggle = true;
+  }
+  else if (mod1Toggle == true){
+      Serial.println("Button state changed to OFF");
+      mod2Toggle = false;
+  }
+  else {
+   // do nothing.
+  }
+
+   if (mod3 == false and mod3Toggle == false){ // for some reason my Pin buttons are reversed...
+      Serial.println("Button state changed to ON");
+      mod3Toggle = true;
+  }
+  else if (mod3Toggle == true){
+      Serial.println("Button state changed to OFF");
+      mod3Toggle = false;
+  }
+  else {
+   // do nothing.
+  }
+
+ if (mod4 == false and mod4Toggle == false){ // for some reason my Pin buttons are reversed...
+      Serial.println("Button state changed to ON");
+      mod4Toggle = true;
+  }
+  else if (mod4Toggle == true){
+      Serial.println("Button state changed to OFF");
+      mod4Toggle = false;
+  }
+  else {
+   // do nothing.
+  }
+ 
 Serial.print("X Pos : ");
 Serial.println(xpos);
 Serial.print("Y Pos : ");
 Serial.println(ypos);
-Serial.print("Button 1 : ");
+Serial.print("Button 1 Toggle / STATE: ");
+Serial.println(mod1Toggle);
+Serial.print("Button 1 Current read: ");
 Serial.println(mod1);
 Serial.print("Button 2 : ");
-Serial.println(mod2);
+Serial.println(mod2Toggle);
 Serial.print("Button 3 : ");
-Serial.println(mod3);
+Serial.println(mod3Toggle);
 Serial.print("Button 4 : ");
-Serial.println(mod4);
+Serial.println(mod4Toggle);
 
 
  // My variables
-String data = String(xpos)+","+String(ypos)+","+String(mod1)+","+String(mod2)+","+String(mod3)+","+String(mod4);
+String data = String(xpos)+","+String(ypos)+","+String(mod1Toggle ? "ON" : "OFF")+","+String(mod2Toggle ? "ON" : "OFF")+","+String(mod3Toggle ? "ON" : "OFF")+","+String(mod4Toggle ? "ON" : "OFF");
 
 Serial.println(data);
 
@@ -134,7 +152,8 @@ if (udp.endPacket() == 0) {
   Serial.println("Error sending UDP packet");
 }
 
-  delay(100);
+Serial.println(strerror(118));
+  delay(500);
 }
 
 int multisample(int pin) {
@@ -146,17 +165,4 @@ int multisample(int pin) {
   }
 
   return total / numSamples;
-}
-
-bool debounce(int pin) {
-  static int lastButtonState = HIGH;
-  int buttonState = digitalRead(pin);
-
-  if (buttonState != lastButtonState) {
-    delay(50); // Adjust this delay as needed
-    buttonState = digitalRead(pin);
-  }
-
-  lastButtonState = buttonState;
-  return buttonState == LOW;
 }
