@@ -1,0 +1,56 @@
+#define NUM_SAMPLES 10
+#define JOY_X_PIN 39
+#define JOY_Y_PIN 36
+#define BUTTON1_PIN 27
+#define BUTTON2_PIN 26
+#define BUTTON3_PIN 25
+#define BUTTON4_PIN 33
+
+bool buttonState[] = {false, false, false, false};
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(JOY_X_PIN, INPUT);
+  pinMode(JOY_Y_PIN, INPUT);
+  pinMode(BUTTON1_PIN, INPUT_PULLUP);
+  pinMode(BUTTON2_PIN, INPUT_PULLUP);
+  pinMode(BUTTON3_PIN, INPUT_PULLUP);
+  pinMode(BUTTON4_PIN, INPUT_PULLUP);
+}
+
+void loop() {
+  int x = readJoystick(JOY_X_PIN);
+  int y = readJoystick(JOY_Y_PIN);
+
+  for (int i = 0; i < 4; i++) {
+    int pin = BUTTON1_PIN + i;
+    if (digitalRead(pin) == LOW) {
+      buttonState[i] = !buttonState[i];
+      delay(200); // debounce
+    }
+  }
+
+  Serial.print("X: ");
+  Serial.println(x);
+  Serial.print(" Y: ");
+  Serial.println(y);
+  for (int i = 0; i < 4; i++) {
+    Serial.print(" Button ");
+    Serial.print(i+1);
+    Serial.print(": ");
+    Serial.println(buttonState[i] ? "ON" : "OFF");
+  }
+  Serial.println();
+
+  delay(10);
+}
+
+int readJoystick(int pin) {
+  long sum = 0;
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    sum += analogRead(pin);
+    delay(1); // wait 1ms
+  }
+  int avg = sum / NUM_SAMPLES;
+  return map(avg, 0, 4095, 0, 1023);
+}
