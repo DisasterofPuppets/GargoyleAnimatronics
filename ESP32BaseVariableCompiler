@@ -1,0 +1,97 @@
+// this does the basics. Gets the value of 4 buttons, the x and y co-ordinates of the joystick while mapping the values from 0 - 4096 to 0 - 1023
+//the x and y values are averaged over 10 readings
+
+#include <FastLED.h>
+#define NUM_SAMPLES 10
+#define JOY_X_PIN 39
+#define JOY_Y_PIN 36
+#define LED_PIN 32
+#define COLOR_ORDER GRB
+#define CHIPSET     WS2812
+#define NUM_LEDS 4
+bool gReverseDirection = false;
+CRGB leds[NUM_LEDS];
+
+int buttonPins[] = {27, 26, 25, 33};
+bool buttonState[] = {false, false, false, false};
+bool lastButtonState[] = {HIGH, HIGH, HIGH, HIGH};
+
+ 
+//This would be the normal code for the LEDS, but mine is wired backwards so replace as needed
+void selectedLED(void * parameters){
+  for(;;){
+    for (int i = 0; i < NUM_LEDS; i++){
+       int ledIndex = NUM_LEDS - 1 - i; // As I have my leds wired in reverse order this line is required. Remove if you wired properly and update below lines
+      if (buttonState[i]) {
+        leds[ledIndex] = CRGB::Red; // Change the color as needed //change the [ledIndex] back to [i]
+      } else {
+        leds[ledIndex] = CRGB::Black; //change the [ledIndex] back to [i]
+      }
+    }
+    FastLED.show();
+    delay(10); // You can adjust this delay as needed
+  }
+}
+
+
+
+void setup() {
+
+  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  randomSeed(analogRead(0)); // Initialize random seed
+  
+  Serial.begin(9600);
+  pinMode(JOY_X_PIN, INPUT);
+  pinMode(JOY_Y_PIN, INPUT);
+  for (int i = 0; i < 4; i++) {
+    pinMode(buttonPins[i], INPUT_PULLUP);
+  }
+
+xTaskCreate(
+  selectedLED,     // function name
+  "selectedLED",  // task name
+  1000,           // stack size
+  NULL,           // task parameters
+  1,              // priority (lower number = higher priority)
+  NULL            // task handle
+);
+  
+}
+
+void loop() {
+  int x = readJoystick(JOY_X_PIN);
+  int y = readJoystick(JOY_Y_PIN);
+
+  for (int i = 0; i < 4; i++) {
+    bool currentButtonState = digitalRead(buttonPins[i]);
+    if (currentButtonState != lastButtonState[i] && currentButtonState == LOW) {
+      buttonState[i] = !buttonState[i];
+      delay(200); // debounce
+    }
+    lastButtonState[i] = currentButtonState;
+  }
+
+  Serial.print("X: ");
+  Serial.println(x);
+  Serial.print(" Y: ");
+  Serial.println(y);
+  for (int i = 0; i < 4; i++) {
+    Serial.print(" Button ");
+    Serial.print(i+1);
+    Serial.print(": ");
+    Serial.println(buttonState[i] ? "ON" : "OFF");
+  }
+  Serial.println();
+
+  delay(100);
+}
+
+int readJoystick(int pin) {
+  long sum = 0;
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    sum += analogRead(pin);
+    delay(1); // wait 1ms
+  }
+  int avg = sum / NUM_SAMPLES;
+  return map(avg, 0, 4095, 0, 1023);
+}
