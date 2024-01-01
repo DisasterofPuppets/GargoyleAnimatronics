@@ -1,0 +1,21 @@
+// upload this code to the board first, open BT device and pair (Will not display on iOS)
+
+#include "BluetoothSerial.h"
+
+BluetoothSerial SerialBT;
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+  SerialBT.begin("Sender"); // Name of your ESP32 Bluetooth device
+  Serial.println("The device started, now you can pair it with bluetooth!");
+}
+
+void loop() {
+  if (SerialBT.available()) {
+    Serial.write(SerialBT.read());
+  }
+  if (Serial.available()) {
+    SerialBT.write(Serial.read());
+  }
+}
