@@ -24,8 +24,8 @@ bool mod2Toggle;
 bool mod3Toggle;
 bool mod4Toggle;
 
-const char *ssid = "SLOWKEVIN";
-const char *password = "FUKevin07";
+const char *ssid = "WIFI";
+const char *password = "PASS";
 
 void setup() {
   Serial.begin(9600);
