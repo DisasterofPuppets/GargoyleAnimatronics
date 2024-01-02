@@ -1,6 +1,6 @@
 import random
 import time
-import socket
+import serial
 import board
 import busio
 from adafruit_motor import servo
@@ -56,25 +56,35 @@ wingXToggle = False
 wingYToggle = False
 
 
-#Parameters
-port=8888
-bufferSize=1024
-host = '192.168.1.80'
-
-#Create UDP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-#Bind socket to address and port
-sock.bind((host,port))
-
 ################################### SOCK DATA ##################################
-def sockread():
+def dataread():
 	global xpos, ypos, mod1, mod2, mod3, mod4
-	while True:
-		data, addr = sock.recvfrom(1024)
-		#print(f"Data received: {data}")           
-		data_list = data.decode().split(',')
-		xpos, ypos, mod1, mod2, mod3, mod4 = map(int,data_list)
+	# Open the serial port
+	ser = serial.Serial('/dev/rfcomm0', 9600)
+
+	try:
+		while True:
+			if ser.in_waiting > 0:
+				# Read data from the serial port
+				data = ser.readline().decode('utf-8').strip()
+				
+				# Split the data string into a list
+				data_list = data.split(',')
+				
+				# Assign the values to your variables
+				xpos, ypos = map(int, data_list[:2])
+				mod1, mod2, mod3, mod4 = data_list[2:]
+				
+				# Print the variables to check
+				print(f"xpos: {xpos}, ypos: {ypos}, mod1: {mod1}, mod2: {mod2}, mod3: {mod3}, mod4: {mod4}")
+
+				# Send acknowledgment (take this line out when satisified all works)
+				ser.write(b'ACK\n')
+				
+	except OSError as e:
+		
+		print (f"Error reading from serial port {ser.port}: {e}")
+		
 
 ####################################### INITIALISE SERVOS
 def startup():      
@@ -124,27 +134,6 @@ def eyemovement():
 		
 
 #-----------------------------------------------------------------------------------------------------------------
-
-#------------------------------PRINT INPUT VALUES-----------
-
-def print_inputs():
-	global xpos, ypos, mod1, mod2, mod3, mod4
-	
-	while True:
-		try:
-			# Print the mapped values
-			print(f"      ")
-			print(f"X pos: {xpos}")
-			print(f"Y pos: {ypos}")
-			print(f"mod1 : {mod1}")
-			print(f"mod2 : {mod2}")
-			print(f"mod3 : {mod3}")
-			print(f"mod4 : {mod4}")
-			time.sleep(0.5)
-		except Exception as e:
-			print(f"Exception: {e}")
-
-#------------------------------------------------------------
 
 
 ###############################TO DO################################
@@ -313,20 +302,21 @@ def servotest():
 #Button modifiers
 
 #Threading
-sock_thread = threading.Thread(target=sockread)
-print_thread = threading.Thread(target=print_inputs)
-wingx_thread = threading.Thread(target=wingx)
-wingy_thread = threading.Thread(target=wingy)
-eye_thread = threading.Thread(target=eyemovement)
+data_thread = threading.Thread(target=dataread)
+#wingx_thread = threading.Thread(target=wingx)
+#wingy_thread = threading.Thread(target=wingy)
+#eye_thread = threading.Thread(target=eyemovement)
 #random_blink = threading.Thread(target=randomblink)
 
 
 #Logic flow / main code
-startup()
-sock_thread.start()
-print_thread.start()
-wingx_thread.start()
-wingy_thread.start()
-eye_thread.start()
+#startup()
+data_thread.start()
+#wingx_thread.start()
+#wingy_thread.start()
+#eye_thread.start()
 #random_blink.start()
+
+#keep main loop running unti data_thread has finished
+data_thread.join()
 
