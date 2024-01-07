@@ -24,7 +24,7 @@ bool mod2Toggle;
 bool mod3Toggle;
 bool mod4Toggle;
 
-const char *ssid = "WIFI";
+const char *ssid = "NETWORK";
 const char *password = "PASS";
 
 void setup() {
@@ -73,13 +73,9 @@ void loop() {
   Serial.print("[Client Connected] "); Serial.println(WiFi.localIP());
   udp.beginPacket(serverip, serverport);
   udp.printf(data.c_str());
-  udp.endPacket();
-
-  if (udp.endPacket() == 0) {
-    Serial.println("Error sending UDP packet");
-  }
-
-  Serial.println(strerror(118));
+  int udpResult = udp.endPacket();
+  Serial.print("UDP Result: ");
+  Serial.println(udpResult);
   delay(500);
 }
 
