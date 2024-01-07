@@ -13,6 +13,7 @@ from adafruit_pca9685 import PCA9685
 import board
 import busio
 import time
+import threading
 
 #Objects
 sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)  ## Internet,UDP
@@ -24,8 +25,8 @@ pca.frequency = 50
 #SERVO array for startup / testing
 #PW based on motor specs sheets
 servos = [
-servo.Servo(pca.channels[0], min_pulse=500, max_pulse=2500), #DS3240 Servo
-servo.Servo(pca.channels[1], min_pulse=500, max_pulse=2500), #DS3240 Servo
+servo.Servo(pca.channels[0], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[1], min_pulse=500, max_pulse=2500), #MG996R Servo
 servo.Servo(pca.channels[2], min_pulse=500, max_pulse=2500), #MG996R Servo
 servo.Servo(pca.channels[3], min_pulse=500, max_pulse=2500), #MG996R Servo
 servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2500), #MG996R Servo
@@ -35,29 +36,31 @@ servo.Servo(pca.channels[7], min_pulse=500, max_pulse=2500), #MG996R Servo
 servo.Servo(pca.channels[8], min_pulse=500, max_pulse=2500), #MG996R Servo
 servo.Servo(pca.channels[9], min_pulse=500, max_pulse=2500), #MG996R Servo
 servo.Servo(pca.channels[10], min_pulse=500, max_pulse=2500), #MG996R Servo
-servo.Servo(pca.channels[11], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[11], min_pulse=500, max_pulse=2500), #MG996R Servrvo
 servo.Servo(pca.channels[12], min_pulse=500, max_pulse=2500), #MG996R Servo
-servo.Servo(pca.channels[13], min_pulse=500, max_pulse=2500), #MG996R Servo
-servo.Servo(pca.channels[14], min_pulse=500, max_pulse=2500), #MG996R Servo
-servo.Servo(pca.channels[15], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[13], min_pulse=500, max_pulse=2500), #DS3240 Servo
+servo.Servo(pca.channels[14], min_pulse=500, max_pulse=2500), #DS3240 Servo
+servo.Servo(pca.channels[15], min_pulse=500, max_pulse=2500), #DS3240 Servo
 ]
 #for direct access by name
-wingLeft = servo.Servo(pca.channels[0], min_pulse=500, max_pulse=2500) #DS3240 Servo
-wingRight = servo.Servo(pca.channels[1], min_pulse=500, max_pulse=2500) #DS3240 Servo
-wingMid = servo.Servo(pca.channels[2], min_pulse=500, max_pulse=2500) #MG996R Servo
-lEyeX = servo.Servo(pca.channels[3], min_pulse=500, max_pulse=2500) #MG996R Servo
-lEyeY = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2500) #MG996R Servo
-lLidTop = servo.Servo(pca.channels[5], min_pulse=500, max_pulse=2500) #MG996R Servo
-lLidBot = servo.Servo(pca.channels[6], min_pulse=500, max_pulse=2500) #MG996R Servo
-rEyeX = servo.Servo(pca.channels[7], min_pulse=500, max_pulse=2500) #MG996R Servo
-rEyeY = servo.Servo(pca.channels[8], min_pulse=500, max_pulse=2500) #MG996R Servo
-rLidTop = servo.Servo(pca.channels[9], min_pulse=500, max_pulse=2500) #MG996R Servo
-rLidBot = servo.Servo(pca.channels[10], min_pulse=500, max_pulse=2500) #MG996R Servo
-neck = servo.Servo(pca.channels[11], min_pulse=500, max_pulse=2500) #MG996R Servo
-servo12 = servo.Servo(pca.channels[12], min_pulse=500, max_pulse=2500) #MG996R Servo
-servo13 = servo.Servo(pca.channels[13], min_pulse=500, max_pulse=2500) #MG996R Servo
-servo14 = servo.Servo(pca.channels[14], min_pulse=500, max_pulse=2500) #MG996R Servo
-servo15 = servo.Servo(pca.channels[15], min_pulse=500, max_pulse=2500) #MG996R Servo
+
+lLidTop = servos[0]
+lLidBot = servos[1]
+lEyeLeft = servos[2]
+lEyeRight = servos[3]
+lEyeUp = servos[4]
+lEyeDown = servos[5]
+rLidTop = servos[6]
+rLidBot = servos[7]
+rEyeLeft = servos[8]
+rEyeRight = servos[9]
+rEyeUp = servos[10]
+rEyeDown = servos[11]
+wingMid = servos[12]
+wingLeft = servos[13]
+wingRight = servos[14]
+neck = servos[15]
+
 
 #Servo fine tuning (MAY NO LONGER BE REQUIRED. ...180 is all the way forward / (slack on the string) 0 pulls the string tight
 midMin = 82
@@ -119,6 +122,25 @@ def startup():
 	servo14.angle = 0
 	servo15.angle = 0
 	time.sleep(21)
+	
+	
+	#---------------------------BLINK-----------------------
+
+def blinker():
+	global mod1, mod2, mod3, mod4
+	print("Blinking....")
+	lLidTop.angle = 180
+	lLidBot.angle = 180
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	time.sleep(50 / 1000)
+	lLidTop.angle = 135
+	lLidBot.angle = 145
+	rLidTop.angle = 135
+	rLidBot.angle = 145
+	time.sleep(100 / 1000) #100 ms
+
+#------------------------------------------------------------
 
 ################################################# READ THE UDP DATA ####################################
 
@@ -164,50 +186,24 @@ def get_ip_address():
 
 
 if __name__ == '__main__':
-    servotest()
-    init()
-    main()
-    
+	#Threading
+	init_thread = threading.Thread(target=init)
+	main_thread = threading.Thread(target=main)
+	getIP_thread = threading.Thread(target=get_ip_address)
+	#wingx_thread = threading.Thread(target=wingx)
+	#wingy_thread = threading.Thread(target=wingy)
+	#eye_thread = threading.Thread(target=eyemovement)
+	blink_thread = threading.Thread(target=blinker)
+
+
+	#Logic flow / main code
+
+	init_thread.start()
+	main_thread.start()
+	getIP_thread.start()
+	#wingx_thread.start()
+	#wingy_thread.start()
+	#eye_thread.start()
+	blink_thread.start()
+
 #############################################################################################
-
-#---------------------------BLINK-----------------------
-
-def blink():
-	global mod1, mod2, mod3, mod4
-	print("Blinking....")
-	lLidTop.angle = 180
-	lLidBot.angle = 180
-	rLidTop.angle = 180
-	rLidBot.angle = 180
-	time.sleep(50 / 1000)
-	lLidTop.angle = 135
-	lLidBot.angle = 145
-	rLidTop.angle = 135
-	rLidBot.angle = 145
-	time.sleep(100 / 1000) #100 ms
-
-#------------------------------------------------------------
-
-
-#Threading
-init_thread = threading.Thread(target=init)
-main_thread = threading.Thread(target=main)
-getIP_thread = threading.Thread(target=getipaddress)
-#Do we Need this?
-name_thread = threading.Thread(target=__name__)
-#wingx_thread = threading.Thread(target=wingx)
-#wingy_thread = threading.Thread(target=wingy)
-#eye_thread = threading.Thread(target=eyemovement)
-blink_thread = threading.Thread(target=blink)
-
-
-#Logic flow / main code
-
-init_thread.start()
-main_thread.start()
-getIP_thread.start()
-name_thread.start()
-#wingx_thread.start()
-#wingy_thread.start()
-#eye_thread.start()
-blink_thread.start()
