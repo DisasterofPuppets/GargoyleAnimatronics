@@ -1,0 +1,213 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#Libraries
+import socket    #https://wiki.python.org/moin/UdpCommunication
+
+#Parameters
+localPort=8888
+bufferSize=1024
+import busio
+from adafruit_motor import servo
+from adafruit_pca9685 import PCA9685
+import board
+import busio
+import time
+
+#Objects
+sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)  ## Internet,UDP
+
+i2c = busio.I2C(board.SCL, board.SDA)
+pca = PCA9685(i2c)
+pca.frequency = 50
+
+#SERVO array for startup / testing
+#PW based on motor specs sheets
+servos = [
+servo.Servo(pca.channels[0], min_pulse=500, max_pulse=2500), #DS3240 Servo
+servo.Servo(pca.channels[1], min_pulse=500, max_pulse=2500), #DS3240 Servo
+servo.Servo(pca.channels[2], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[3], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[5], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[6], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[7], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[8], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[9], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[10], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[11], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[12], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[13], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[14], min_pulse=500, max_pulse=2500), #MG996R Servo
+servo.Servo(pca.channels[15], min_pulse=500, max_pulse=2500), #MG996R Servo
+]
+#for direct access by name
+wingLeft = servo.Servo(pca.channels[0], min_pulse=500, max_pulse=2500) #DS3240 Servo
+wingRight = servo.Servo(pca.channels[1], min_pulse=500, max_pulse=2500) #DS3240 Servo
+wingMid = servo.Servo(pca.channels[2], min_pulse=500, max_pulse=2500) #MG996R Servo
+lEyeX = servo.Servo(pca.channels[3], min_pulse=500, max_pulse=2500) #MG996R Servo
+lEyeY = servo.Servo(pca.channels[4], min_pulse=500, max_pulse=2500) #MG996R Servo
+lLidTop = servo.Servo(pca.channels[5], min_pulse=500, max_pulse=2500) #MG996R Servo
+lLidBot = servo.Servo(pca.channels[6], min_pulse=500, max_pulse=2500) #MG996R Servo
+rEyeX = servo.Servo(pca.channels[7], min_pulse=500, max_pulse=2500) #MG996R Servo
+rEyeY = servo.Servo(pca.channels[8], min_pulse=500, max_pulse=2500) #MG996R Servo
+rLidTop = servo.Servo(pca.channels[9], min_pulse=500, max_pulse=2500) #MG996R Servo
+rLidBot = servo.Servo(pca.channels[10], min_pulse=500, max_pulse=2500) #MG996R Servo
+neck = servo.Servo(pca.channels[11], min_pulse=500, max_pulse=2500) #MG996R Servo
+servo12 = servo.Servo(pca.channels[12], min_pulse=500, max_pulse=2500) #MG996R Servo
+servo13 = servo.Servo(pca.channels[13], min_pulse=500, max_pulse=2500) #MG996R Servo
+servo14 = servo.Servo(pca.channels[14], min_pulse=500, max_pulse=2500) #MG996R Servo
+servo15 = servo.Servo(pca.channels[15], min_pulse=500, max_pulse=2500) #MG996R Servo
+
+#Servo fine tuning (MAY NO LONGER BE REQUIRED. ...180 is all the way forward / (slack on the string) 0 pulls the string tight
+midMin = 82
+midMax = 20
+LexMin = 0
+LexMax = 80
+LeyMin = 65
+LeyMax = 120
+RexMin = 0
+ReyMax = 0
+LlidTMin = 90
+LlidTMax = 180
+LlidBMin = 90
+LlidBMax = 180
+
+#global variables
+xpos = 0
+ypos = 0
+mod1 = 0
+mod2 = 0
+mod3 = 0
+mod4 = 0
+wingXToggle = False
+wingYToggle = False
+
+#180 servo sweep test
+
+def servotest():
+    print("Sweep from 0 to 180")
+    for i in range(180):
+        for servo_obj in servos:
+            servo_obj.angle = i
+        time.sleep(0.01)
+        
+    print("Sweep from 180 to 0")
+    for i in range(180):
+        for servo_obj in servos:
+            servo_obj.angle = 180 - i
+        time.sleep(0.01)
+
+####################################### INITIALISE SERVOS
+def startup():
+	print(f"Initialising Servos")
+	#REPLACE THESE VALUES WITH THE MIN MAX VARABLES^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^OR use html config...to be coded
+	wingLeft.angle = 0 #90 is closed, 0 is open
+	wingRight.angle = 90 #90 is closed, 0 
+	wingMid.angle = midMin #20 is open / 82 closed
+	lEyeX.angle = (LexMin + LexMax) / 2 #40 is middle,0 right, 80 left
+	lEyeY.angle = (LeyMin + LeyMax) / 2 #90 is middle, 120 top, 65 bottom
+	lLidTop.angle = 90#LlidTMax #180 is closed, 90 open
+	lLidBot.angle = 90#LlidBMax #180 is closed, 90 open
+	rEyeX.angle = 90
+	rEyeY.angle = 90
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	neck.angle = 90
+	servo12.angle = 0
+	servo13.angle = 0
+	servo14.angle = 0
+	servo15.angle = 0
+	time.sleep(21)
+
+################################################# READ THE UDP DATA ####################################
+
+def init():
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1) #enable broadcasting mode
+    sock.bind(('', localPort))
+    print("UDP server : {}:{}".format(get_ip_address(),localPort))
+
+# function main 
+def main():
+    while True:
+        data, addr = sock.recvfrom(1024) # get data
+        print("received message: {} from {}\n".format(data,addr))
+        
+        # Split the data string into a list
+        data_list = data.decode('utf-8').split(',')
+        
+        # Assign the values to your variables
+        xpos, ypos = map(int, data_list[:2])
+        mod1, mod2, mod3, mod4 = data_list[2:]
+        
+        # Print the variables to check
+        print(f"xpos: {xpos}\n"
+        f"ypos: {ypos}\n"
+        f"mod1: {mod1}\n"
+        f"mod2: {mod2}\n"
+        f"mod3: {mod3}\n"
+        f"mod4: {mod4}")
+        
+        sock.sendto("RPi received OK".encode(), addr)  # write data
+
+
+# function get_ip_address 
+def get_ip_address():
+    """get host ip address"""
+    ip_address = '';
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8",80))
+    ip_address = s.getsockname()[0]
+    s.close()
+    return ip_address
+
+
+if __name__ == '__main__':
+    servotest()
+    init()
+    main()
+    
+#############################################################################################
+
+#---------------------------BLINK-----------------------
+
+def blink():
+	global mod1, mod2, mod3, mod4
+	print("Blinking....")
+	lLidTop.angle = 180
+	lLidBot.angle = 180
+	rLidTop.angle = 180
+	rLidBot.angle = 180
+	time.sleep(50 / 1000)
+	lLidTop.angle = 135
+	lLidBot.angle = 145
+	rLidTop.angle = 135
+	rLidBot.angle = 145
+	time.sleep(100 / 1000) #100 ms
+
+#------------------------------------------------------------
+
+
+#Threading
+init_thread = threading.Thread(target=init)
+main_thread = threading.Thread(target=main)
+getIP_thread = threading.Thread(target=getipaddress)
+#Do we Need this?
+name_thread = threading.Thread(target=__name__)
+#wingx_thread = threading.Thread(target=wingx)
+#wingy_thread = threading.Thread(target=wingy)
+#eye_thread = threading.Thread(target=eyemovement)
+blink_thread = threading.Thread(target=blink)
+
+
+#Logic flow / main code
+
+init_thread.start()
+main_thread.start()
+getIP_thread.start()
+name_thread.start()
+#wingx_thread.start()
+#wingy_thread.start()
+#eye_thread.start()
+blink_thread.start()
