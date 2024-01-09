@@ -24,14 +24,14 @@ bool mod2Toggle;
 bool mod3Toggle;
 bool mod4Toggle;
 
-const char *ssid = "NETWORK";
+const char *ssid = "SSID";
 const char *password = "PASS";
 
 void setup() {
   Serial.begin(9600);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500); Serial.print(F("."));
+  Serial.print(F("."));
   }
   udp.begin(localPort);
   Serial.printf("UDP Client : %s:%i \n", WiFi.localIP().toString().c_str(), localPort);
@@ -44,18 +44,15 @@ void setup() {
 }
 
 void loop() {
-  int x = readJoystick(JOY_X_PIN);
-  int y = readJoystick(JOY_Y_PIN);
 
-  // Update xpos and ypos with joystick readings
-  xpos = x;
-  ypos = y;
+  xpos = analogRead(JOY_X_PIN);
+  ypos = analogRead(JOY_Y_PIN);
 
   for (int i = 0; i < 4; i++) {
     bool currentButtonState = digitalRead(buttonPins[i]);
     if (currentButtonState != lastButtonState[i] && currentButtonState == LOW) {
       buttonState[i] = !buttonState[i];
-      delay(200); // debounce
+      delay(10); // debounce
     }
     lastButtonState[i] = currentButtonState;
   }
@@ -70,22 +67,12 @@ void loop() {
 
   Serial.println(data);
 
-  Serial.print("[Client Connected] "); Serial.println(WiFi.localIP());
+  Serial.print("[Client Connected] "); 
+  Serial.println(WiFi.localIP());
   udp.beginPacket(serverip, serverport);
   udp.printf(data.c_str());
   int udpResult = udp.endPacket();
   Serial.print("UDP Result: ");
   Serial.println(udpResult);
-  delay(500);
-}
-
-
-int readJoystick(int pin) {
-  long sum = 0;
-  for (int i = 0; i < NUM_SAMPLES; i++) {
-    sum += analogRead(pin);
-    delay(1); // wait 1ms
-  }
-  int avg = sum / NUM_SAMPLES;
-  return map(avg, 0, 4095, 0, 1023);
+  delay(1);
 }
