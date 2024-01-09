@@ -1,0 +1,111 @@
+#include <esp_now.h>
+#include <WiFi.h>
+
+#define JOY_X_PIN 39
+#define JOY_Y_PIN 36
+uint8_t broadcastAddress[] = {0x08, 0xD1, 0xF9, 0xC8, 0xE6, 0xB8};// MAC address for receiver
+int buttonPins[] = {27,26,25,33};
+bool buttonState[] = {false, false, false, false};
+bool lastButtonState[] = {HIGH, HIGH, HIGH, HIGH};
+bool mod1;
+bool mod2;
+bool mod3;
+bool mod4;
+
+// Structure to send data
+// Must match the receiver structure
+typedef struct struct_message {
+  int xpos;
+  int ypos;
+  bool mod1Toggle;
+  bool mod2Toggle;
+  bool mod3Toggle;
+  bool mod4Toggle;
+} struct_message;
+
+// Create a struct_message called myData
+struct_message myData;
+
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+}
+
+void setup() {
+
+  Serial.begin(9600);
+
+  pinMode(JOY_X_PIN, INPUT);
+  pinMode(JOY_Y_PIN, INPUT);
+  for (int i = 0; i < 4; i++) {
+    pinMode(buttonPins[i], INPUT_PULLUP);
+  }
+  
+  // Init ESP-NOW
+  WiFi.mode(WIFI_STA);
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  // Once ESPNow is successfully Init, we will register for Send CB to
+  // get the status of Trasnmitted packet
+  esp_now_register_send_cb(OnDataSent);
+  
+  // rest of your setup code
+}
+
+void loop() {
+  // collect your data
+  myData.xpos = analogRead(JOY_X_PIN);
+  myData.ypos = analogRead(JOY_Y_PIN);
+
+  for (int i = 0; i < 4; i++) {
+    bool currentButtonState = digitalRead(buttonPins[i]);
+    if (currentButtonState != lastButtonState[i] && currentButtonState == LOW) {
+      buttonState[i] = !buttonState[i];
+      delay(10); // debounce
+    }
+    lastButtonState[i] = currentButtonState;
+  }
+
+  // Update the mod variables based on the button states
+  myData.mod1Toggle = buttonState[0];
+  myData.mod2Toggle = buttonState[1];
+  myData.mod3Toggle = buttonState[2];
+  myData.mod4Toggle = buttonState[3];
+  
+ // Print the values of myData
+  Serial.print("xpos: ");
+  Serial.println(myData.xpos);
+  Serial.print("ypos: ");
+  Serial.println(myData.ypos);
+  Serial.print("mod1Toggle: ");
+  Serial.println(myData.mod1Toggle);
+  Serial.print("mod2Toggle: ");
+  Serial.println(myData.mod2Toggle);
+  Serial.print("mod3Toggle: ");
+  Serial.println(myData.mod3Toggle);
+  Serial.print("mod4Toggle: ");
+  Serial.println(myData.mod4Toggle);
+
+  // Send message via ESP-NOW
+  esp_now_peer_info_t peerInfo;
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6); // broadcastAddress should be the MAC address of the other ESP32 board
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  
+  // Add peer        
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    Serial.println("Failed to add peer");
+    return;
+  }
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+  
+  if (result == ESP_OK) {
+    Serial.println("Sent with success");
+  }
+  else {
+    Serial.println("Error sending the data");
+  }
+}
