@@ -1,9 +1,12 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
+String hostname = "Pitcher";
+
 #define JOY_X_PIN 39
 #define JOY_Y_PIN 36
-uint8_t broadcastAddress[] = {0x08, 0xD1, 0xF9, 0xC8, 0xE6, 0xB8};// MAC address for receiver
+uint8_t broadcastAddress[] = {0x08, 0xD1, 0xF9, 0xC8, 0xE6, 0xB8}; // MAC address for receiver
+//08:D1:F9:C8:E6:B8
 int buttonPins[] = {27,26,25,33};
 bool buttonState[] = {false, false, false, false};
 bool lastButtonState[] = {HIGH, HIGH, HIGH, HIGH};
@@ -41,8 +44,10 @@ void setup() {
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
   
-  // Init ESP-NOW
+  // Disconnect and reset WiFi Expressif code bugfix
+  WiFi.disconnect(true);
   WiFi.mode(WIFI_STA);
+  WiFi.setHostname(hostname.c_str()); //define hostname
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
@@ -108,4 +113,7 @@ void loop() {
   else {
     Serial.println("Error sending the data");
   }
+
+  //remove me when done
+  delay(1000);
 }
