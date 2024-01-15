@@ -28,10 +28,10 @@ String hostname = "Pitcher";
 
 #define JOY_X_PIN 39
 #define JOY_Y_PIN 36
-int buttonPins[] = {27,26,25,33};
-bool buttonState[] = {false, false, false, false};
-bool lastButtonState[] = {HIGH, HIGH, HIGH, HIGH};
-
+#define button1Pin 27
+#define button2Pin 26
+#define button3Pin 25
+#define button4Pin 33
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 
@@ -47,10 +47,10 @@ typedef struct struct_message {
 
   int xpos;
   int ypos;
-  bool mod1Toggle;
-  bool mod2Toggle;
-  bool mod3Toggle;
-  bool mod4Toggle;
+  bool mod1;
+  bool mod2;
+  bool mod3;
+  bool mod4;
 
 } struct_message;
 
@@ -137,35 +137,27 @@ void loop() {
   // Set values to send
   myData.xpos = analogRead(JOY_X_PIN);
   myData.ypos = analogRead(JOY_Y_PIN);
+  myData.mod1 = digitalRead(button1Pin);
+  myData.mod2 = digitalRead(button2Pin);
+  myData.mod3 = digitalRead(button3Pin);
+  myData.mod4 = digitalRead(button4Pin);
 
-  for (int i = 0; i < 4; i++) {
-    bool currentButtonState = digitalRead(buttonPins[i]);
-    if (currentButtonState != lastButtonState[i] && currentButtonState == LOW) {
-      buttonState[i] = !buttonState[i];
-      delay(10); // debounce
-    }
-    lastButtonState[i] = currentButtonState;
-  }
 
-  // Update the mod variables based on the button states
-  myData.mod1Toggle = buttonState[0];
-  myData.mod2Toggle = buttonState[1];
-  myData.mod3Toggle = buttonState[2];
-  myData.mod4Toggle = buttonState[3];
+
 
   // Print the values of myData
   Serial.print("xpos: ");
   Serial.println(myData.xpos);
   Serial.print("ypos: ");
   Serial.println(myData.ypos);
-  Serial.print("mod1Toggle: ");
-  Serial.println(myData.mod1Toggle);
-  Serial.print("mod2Toggle: ");
-  Serial.println(myData.mod2Toggle);
-  Serial.print("mod3Toggle: ");
-  Serial.println(myData.mod3Toggle);
-  Serial.print("mod4Toggle: ");
-  Serial.println(myData.mod4Toggle);
+  Serial.print("mod1: ");
+  Serial.println(myData.mod1);
+  Serial.print("mod2: ");
+  Serial.println(myData.mod2);
+  Serial.print("mod3: ");
+  Serial.println(myData.mod3);
+  Serial.print("mod4: ");
+  Serial.println(myData.mod4);
 
   // Send message via ESP-NOW
 
@@ -184,5 +176,5 @@ void loop() {
 
   }
 
-  delay(200);
+ // delay(2000);
 }
