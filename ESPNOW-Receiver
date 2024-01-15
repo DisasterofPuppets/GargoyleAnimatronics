@@ -2,7 +2,8 @@
 
 #include <WiFi.h>
 
- 
+ String hostname = "Catcher";
+
 // Structure example to receive data
 
 // Must match the sender structure
@@ -19,11 +20,13 @@ typedef struct struct_message {
 } struct_message;
 
  
+
 // Create a struct_message called myData
 
 struct_message myData;
 
  
+
 // callback function that will be executed when data is received
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
@@ -57,7 +60,7 @@ void setup() {
 
   Serial.begin(115200);
 
- 
+  WiFi.setHostname(hostname.c_str()); //define hostname
 
   // Set device as a Wi-Fi Station
 
