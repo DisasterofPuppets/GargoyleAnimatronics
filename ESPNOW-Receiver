@@ -1,21 +1,56 @@
+/*
+
+  Rui Santos
+
+  Complete project details at https://RandomNerdTutorials.com/esp-now-esp32-arduino-ide/
+
+ 
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+
+  of this software and associated documentation files.
+
+ 
+
+  The above copyright notice and this permission notice shall be included in all
+
+  copies or substantial portions of the Software.
+
+*/
+
+ 
+
 #include <esp_now.h>
 
 #include <WiFi.h>
 
- String hostname = "Catcher";
+String hostname = "Pitcher";
 
-// Structure example to receive data
+#define JOY_X_PIN 39
+#define JOY_Y_PIN 36
+#define button1Pin 27
+#define button2Pin 26
+#define button3Pin 25
+#define button4Pin 33
 
-// Must match the sender structure
+// REPLACE WITH YOUR RECEIVER MAC Address
+
+uint8_t broadcastAddress[] = {0x08, 0xD1, 0xF9, 0xC8, 0xE6, 0xB8};
+//08:D1:F9:C8:E6:B8
+ 
+
+// Structure example to send data
+
+// Must match the receiver structure
 
 typedef struct struct_message {
 
   int xpos;
   int ypos;
-  bool mod1Toggle;
-  bool mod2Toggle;
-  bool mod3Toggle;
-  bool mod4Toggle;
+  bool mod1;
+  bool mod2;
+  bool mod3;
+  bool mod4;
 
 } struct_message;
 
@@ -27,46 +62,36 @@ struct_message myData;
 
  
 
-// callback function that will be executed when data is received
+esp_now_peer_info_t peerInfo;
 
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+ 
 
-  memcpy(&myData, incomingData, sizeof(myData));
+// callback when data is sent
 
-  Serial.print("Bytes received: ");
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
-  Serial.println(len);
+  Serial.print("\r\nLast Packet Send Status:\t");
 
-  Serial.print("xpos: ");
-  Serial.println(myData.xpos);
-  Serial.print("ypos: ");
-  Serial.println(myData.ypos);
-  Serial.print("mod1Toggle: ");
-  Serial.println(myData.mod1Toggle);
-  Serial.print("mod2Toggle: ");
-  Serial.println(myData.mod2Toggle);
-  Serial.print("mod3Toggle: ");
-  Serial.println(myData.mod3Toggle);
-  Serial.print("mod4Toggle: ");
-  Serial.println(myData.mod4Toggle);
-
-  Serial.println();
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 
 }
 
 void setup() {
 
-  // Initialize Serial Monitor
+  // Init Serial Monitor
 
   Serial.begin(115200);
 
   WiFi.setHostname(hostname.c_str()); //define hostname
-
+  
   // Set device as a Wi-Fi Station
 
   WiFi.mode(WIFI_STA);
 
- 
+ pinMode (button1Pin,INPUT_PULLUP);
+ pinMode (button2Pin,INPUT_PULLUP);
+ pinMode (button3Pin,INPUT_PULLUP);
+ pinMode (button4Pin,INPUT_PULLUP);
 
   // Init ESP-NOW
 
@@ -80,16 +105,79 @@ void setup() {
 
  
 
-  // Once ESPNow is successfully Init, we will register for recv CB to
+  // Once ESPNow is successfully Init, we will register for Send CB to
 
-  // get recv packer info
+  // get the status of Transmitted packet
 
-  esp_now_register_recv_cb(OnDataRecv);
+  esp_now_register_send_cb(OnDataSent);
 
-}
 
-void loop() {
+// Register peer
+
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+
+  peerInfo.channel = 0; 
+
+  peerInfo.encrypt = false;
 
  
 
+  // Add peer       
+
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+
+    Serial.println("Failed to add peer");
+
+    return;
+
+  }
+
+}
+
+
+void loop() {
+
+  // Set values to send
+  myData.xpos = analogRead(JOY_X_PIN);
+  myData.ypos = analogRead(JOY_Y_PIN);
+  myData.mod1 = digitalRead(button1Pin);
+  myData.mod2 = digitalRead(button2Pin);
+  myData.mod3 = digitalRead(button3Pin);
+  myData.mod4 = digitalRead(button4Pin);
+
+
+
+
+  // Print the values of myData
+  Serial.print("xpos: ");
+  Serial.println(myData.xpos);
+  Serial.print("ypos: ");
+  Serial.println(myData.ypos);
+  Serial.print("mod1: ");
+  Serial.println(myData.mod1);
+  Serial.print("mod2: ");
+  Serial.println(myData.mod2);
+  Serial.print("mod3: ");
+  Serial.println(myData.mod3);
+  Serial.print("mod4: ");
+  Serial.println(myData.mod4);
+
+  // Send message via ESP-NOW
+
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+
+  
+  if (result == ESP_OK) {
+
+    Serial.println("Sent with success");
+
+  }
+
+  else {
+
+    Serial.println("Error sending the data");
+
+  }
+
+  //delay(2000);
 }
