@@ -31,10 +31,7 @@ String hostname = "Pitcher";
 int buttonPins[] = {27,26,25,33};
 bool buttonState[] = {false, false, false, false};
 bool lastButtonState[] = {HIGH, HIGH, HIGH, HIGH};
-bool mod1;
-bool mod2;
-bool mod3;
-bool mod4;
+
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 
