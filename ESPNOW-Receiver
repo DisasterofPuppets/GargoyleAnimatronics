@@ -1,78 +1,92 @@
 #include <esp_now.h>
+
 #include <WiFi.h>
 
-String hostname = "Catcher";
+ 
+// Structure example to receive data
 
-// Structure to receive data
 // Must match the sender structure
+
 typedef struct struct_message {
+
   int xpos;
   int ypos;
   bool mod1Toggle;
   bool mod2Toggle;
   bool mod3Toggle;
   bool mod4Toggle;
+
 } struct_message;
 
-// Create a struct_message to hold incoming sensor readings
-struct_message incomingReadings;
+ 
+// Create a struct_message called myData
 
-// Callback when data is received
-void OnDataRecv(const uint8_t *mac_addr, const uint8_t *incomingData, int len) {
-  memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
+struct_message myData;
+
+ 
+// callback function that will be executed when data is received
+
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+
+  memcpy(&myData, incomingData, sizeof(myData));
+
   Serial.print("Bytes received: ");
+
   Serial.println(len);
+
   Serial.print("xpos: ");
-  Serial.println(incomingReadings.xpos);
+  Serial.println(myData.xpos);
   Serial.print("ypos: ");
-  Serial.println(incomingReadings.ypos);
+  Serial.println(myData.ypos);
   Serial.print("mod1Toggle: ");
-  Serial.println(incomingReadings.mod1Toggle);
+  Serial.println(myData.mod1Toggle);
   Serial.print("mod2Toggle: ");
-  Serial.println(incomingReadings.mod2Toggle);
+  Serial.println(myData.mod2Toggle);
   Serial.print("mod3Toggle: ");
-  Serial.println(incomingReadings.mod3Toggle);
+  Serial.println(myData.mod3Toggle);
   Serial.print("mod4Toggle: ");
-  Serial.println(incomingReadings.mod4Toggle);
+  Serial.println(myData.mod4Toggle);
+
+  Serial.println();
+
 }
 
 void setup() {
+
+  // Initialize Serial Monitor
+
   Serial.begin(115200);
-  
-  
-  // Disconnect and reset WiFi
-  WiFi.disconnect(true); //Expressif bode bug fix
+
+ 
+
+  // Set device as a Wi-Fi Station
+
   WiFi.mode(WIFI_STA);
-  WiFi.setHostname(hostname.c_str()); //define hostname
-  
+
+ 
+
   // Init ESP-NOW
+
   if (esp_now_init() != ESP_OK) {
+
     Serial.println("Error initializing ESP-NOW");
+
     return;
+
   }
 
+ 
+
   // Once ESPNow is successfully Init, we will register for recv CB to
+
   // get recv packer info
+
   esp_now_register_recv_cb(OnDataRecv);
 
-  // Print the Wifi MAC address
-  Serial.println(WiFi.macAddress());
 }
 
 void loop() {
- // Print the values of incomingReadings
-  Serial.print("xpos: ");
-  Serial.println(incomingReadings.xpos);
-  Serial.print("ypos: ");
-  Serial.println(incomingReadings.ypos);
-  Serial.print("mod1Toggle: ");
-  Serial.println(incomingReadings.mod1Toggle);
-  Serial.print("mod2Toggle: ");
-  Serial.println(incomingReadings.mod2Toggle);
-  Serial.print("mod3Toggle: ");
-  Serial.println(incomingReadings.mod3Toggle);
-  Serial.print("mod4Toggle: ");
-  Serial.println(incomingReadings.mod4Toggle);
 
-  delay(1000); // Add a delay to make the printed data more readable
+ 
+
 }
