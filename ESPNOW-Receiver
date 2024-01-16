@@ -1,11 +1,14 @@
 #include <esp_now.h>
-
 #include <WiFi.h>
 
- String hostname = "Catcher";
+String hostname = "Catcher";
+int OKLED = 27;
+bool isConnected = false;
+unsigned long lastReceiveTime = 0;
+const unsigned long TIMEOUT_PERIOD = 5000; // Adjust the timeout period in milliseconds
+
 
 // Structure example to receive data
-
 // Must match the sender structure
 
 typedef struct struct_message {
@@ -19,77 +22,88 @@ typedef struct struct_message {
 
 } struct_message;
 
- 
-
 // Create a struct_message called myData
 
 struct_message myData;
 
- 
-
 // callback function that will be executed when data is received
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  // Update lastReceiveTime
+      lastReceiveTime = millis();
 
   memcpy(&myData, incomingData, sizeof(myData));
 
-  Serial.print("Bytes received: ");
-
-  Serial.println(len);
-
-  Serial.print("xpos: ");
-  Serial.println(myData.xpos);
-  Serial.print("ypos: ");
-  Serial.println(myData.ypos);
-  Serial.print("mod1Toggle: ");
-  Serial.println(myData.mod1Toggle);
-  Serial.print("mod2Toggle: ");
-  Serial.println(myData.mod2Toggle);
-  Serial.print("mod3Toggle: ");
-  Serial.println(myData.mod3Toggle);
-  Serial.print("mod4Toggle: ");
-  Serial.println(myData.mod4Toggle);
-
-  Serial.println();
-
+    Serial.print("Bytes received: ");
+    Serial.println(len);
+  
+    Serial.print("xpos: ");
+    Serial.println(myData.xpos);
+    Serial.print("ypos: ");
+    Serial.println(myData.ypos);
+    Serial.print("mod1Toggle: ");
+    Serial.println(myData.mod1Toggle);
+    Serial.print("mod2Toggle: ");
+    Serial.println(myData.mod2Toggle);
+    Serial.print("mod3Toggle: ");
+    Serial.println(myData.mod3Toggle);
+    Serial.print("mod4Toggle: ");
+    Serial.println(myData.mod4Toggle);
+    Serial.println();
 }
 
 void setup() {
 
-  // Initialize Serial Monitor
+//set pin modes
+  pinMode(OKLED,OUTPUT);
 
-  Serial.begin(115200);
+//init led
+  digitalWrite(OKLED,LOW);
+
+// Initialize Serial Monitor
+
+
+// Set hostname (not actually required)
 
   WiFi.setHostname(hostname.c_str()); //define hostname
 
-  // Set device as a Wi-Fi Station
+// Set device as a Wi-Fi Station
 
   WiFi.mode(WIFI_STA);
 
- 
+   Serial.begin(115200);
 
-  // Init ESP-NOW
+
+// Init ESP-NOW
 
   if (esp_now_init() != ESP_OK) {
 
     Serial.println("Error initializing ESP-NOW");
-
     return;
 
   }
 
+
+
  
+// Once ESPNow is successfully Init, we will register for recv CB to
 
-  // Once ESPNow is successfully Init, we will register for recv CB to
-
-  // get recv packer info
+// get recv packer info
 
   esp_now_register_recv_cb(OnDataRecv);
 
 }
-
 void loop() {
+// If no packet has been received for TIMEOUT_PERIOD
+  if (millis() - lastReceiveTime > TIMEOUT_PERIOD) {
+    // Turn on OKLED
+    digitalWrite(OKLED, HIGH);
+    isConnected = false;
+  } else {
+    // Turn off OKLED
+    digitalWrite(OKLED, LOW);
+    isConnected = true;
+  }
 
- 
 
 }
