@@ -1,11 +1,46 @@
+//DOIT ESP32 DEVKIT V1 is the board I used
 #include <esp_now.h>
 #include <WiFi.h>
+#include <Adafruit_PWMServoDriver.h>
+#include <Wire.h>
+//PCA9685
 
 String hostname = "Catcher";
 int OKLED = 27;
 bool isConnected = false;
 unsigned long lastReceiveTime = 0;
 const unsigned long TIMEOUT_PERIOD = 5000; // Adjust the timeout period in milliseconds
+
+float xSmoothed;
+float ySmoothed;
+float xPrev;
+float yPrev;
+int joyX; 
+int joyY;
+int mapX;
+int mapY;
+const int numSamples = 10;
+bool mod1 = false;
+bool mod2 = false;
+bool mod3 = false;
+bool mod4 = false;
+// Servo name to number
+int lLidTop = 0;
+int lLidBot = 1;
+int lEyeLeft = 2;
+int lEyeRight = 3;
+int lEyeUp = 4;
+int lEyeDown = 5;
+int rLidTop = 6;
+int rLidBot = 7;
+int rEyeLeft = 8;
+int rEyeRight = 9;
+int rEyeUp = 10;
+int rEyeDown = 11;
+int wingMid = 12;
+int wingLeft = 13;
+int wingRight = 14;
+int neck = 15;
 
 
 // Structure example to receive data
@@ -15,10 +50,10 @@ typedef struct struct_message {
 
   int xpos;
   int ypos;
-  bool mod1Toggle;
-  bool mod2Toggle;
-  bool mod3Toggle;
-  bool mod4Toggle;
+  bool mod1;
+  bool mod2;
+  bool mod3;
+  bool mod4;
 
 } struct_message;
 
@@ -34,6 +69,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
   memcpy(&myData, incomingData, sizeof(myData));
 
+
     Serial.print("Bytes received: ");
     Serial.println(len);
   
@@ -41,27 +77,51 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     Serial.println(myData.xpos);
     Serial.print("ypos: ");
     Serial.println(myData.ypos);
-    Serial.print("mod1Toggle: ");
-    Serial.println(myData.mod1Toggle);
-    Serial.print("mod2Toggle: ");
-    Serial.println(myData.mod2Toggle);
-    Serial.print("mod3Toggle: ");
-    Serial.println(myData.mod3Toggle);
-    Serial.print("mod4Toggle: ");
-    Serial.println(myData.mod4Toggle);
+    Serial.print("mod1: ");
+    Serial.println(myData.mod1);
+    Serial.print("mod2: ");
+    Serial.println(myData.mod2);
+    Serial.print("mod3: ");
+    Serial.println(myData.mod3);
+    Serial.print("mod4: ");
+    Serial.println(myData.mod4);
     Serial.println();
+    
 }
 
+// called this way, it uses the default address 0x40
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
+/*******************SERVOS
+0 - lLidTop MG996R Servo
+1 - lLidBot MG996R Servo
+2 - lEyeLeft MG996R Servo
+3 - lEyeRight MG996R Servo
+4 - lEyeUp MG996R Servo
+5 - lEyeDown MG996R Servo
+6 - rLidTop MG996R Servo
+7 - rLidBot MG996R Servo
+8 - rEyeLeft MG996R Servo
+9 - rEyeRight MG996R Servo
+10 - rEyeUp MG996R Servo
+11 - rEyeDown MG996R Servo
+12 - wingMid MG996R Servo
+13 - wingLeft #DS3240 Servo
+14 - wingRight #DS3240 Servo
+15 - neck #DS3240 Servo
+*/
+
+// this accounts for both types of servo but doesn't seem to work with Arduino code?
+//#define SERVOMIN  600 // this is the 'minimum' pulse length count (out of 4096)
+//#define SERVOMAX  2500 // this is the 'maximum' pulse length count (out of 4096)
+
+#define SERVOMIN  125 // this is the 'minimum' pulse length count (out of 4096)
+#define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
+
+
 void setup() {
-
-//set pin modes
-  pinMode(OKLED,OUTPUT);
-
-//init led
-  digitalWrite(OKLED,LOW);
-
-// Initialize Serial Monitor
-
+//Sanity Delay
+delay(500);
 
 // Set hostname (not actually required)
 
@@ -71,7 +131,30 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
 
-   Serial.begin(115200);
+
+
+//initialise servos
+  pwm.begin();
+  pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+
+Serial.begin(115200);
+
+// Set servos to neutral
+Serial.println("Homing Servos");
+  //set all servos to default neutral 90
+  Serial.println("Homing Servos");
+  for (int i = 0; i <16; i++){
+    pwm.setPWM(i,0,angleToPulse(90));
+  }
+delay(1000);
+          
+//set pin modes
+  pinMode(OKLED,OUTPUT);
+
+//init led
+  digitalWrite(OKLED,LOW);
+
+
 
 
 // Init ESP-NOW
@@ -105,5 +188,72 @@ void loop() {
     isConnected = true;
   }
 
+EYES();
+
+/*
+Serial.println("180");
+pwm.setPWM(lEyeLeft,0,angleToPulse(180));
+pwm.setPWM(lEyeRight,0,angleToPulse(0));
+
+delay(3000);
+
+
+Serial.println("0");
+pwm.setPWM(lEyeLeft,0,angleToPulse(0));
+pwm.setPWM(lEyeRight,0,angleToPulse(180));
+ 
+delay(1000);
+*/
+}
+
+
+int angleToPulse(int ang){
+   int pulse = map(ang,0, 180, SERVOMIN,SERVOMAX);// map angle of 0 to 180 to Servo min and Servo max 
+  // Serial.print("Angle: ");Serial.print(ang);
+//   Serial.print(" pulse: ");Serial.println(pulse);
+   return pulse;
+}
+
+int multisample(int pin) {
+  int total = 0;
+  
+  for (int i = 0; i < numSamples; i++) {
+    total += analogRead(pin);
+    delay(1);  // You can adjust this delay if needed
+  }
+
+  return total / numSamples;
+}
+
+void EYES(){
+
+// multisamples the joystick postion to average and smooth
+   joyX = multisample(myData.xpos);
+   joyY = multisample(myData.ypos);
+
+   // manually mapping joystick range to angle
+   mapX = map(joyX,0,4095,0,180);
+   mapY = map(joyY,0,4095,0,180);
+
+// if too slow, mess with these rations (need to = 1 in total)
+   xSmoothed = (mapX *0.3) + (xPrev * 0.7);
+   ySmoothed = (mapY *0.3) + (yPrev * 0.7);
+
+   xPrev = xSmoothed;
+   yPrev = ySmoothed;
+
+//Need to mirror these
+
+// Left Eye Movement
+  pwm.setPWM(lEyeLeft,0,angleToPulse(xSmoothed)); // Left
+  pwm.setPWM(lEyeRight,0,angleToPulse(180 - xSmoothed)); // Right
+  pwm.setPWM(lEyeUp,0,angleToPulse(ySmoothed)); // Up Down
+  pwm.setPWM(lEyeDown,0,angleToPulse(180 - ySmoothed)); // Down
+
+//Right Eye Movement  
+  pwm.setPWM(rEyeLeft,0,angleToPulse(xSmoothed)); // Left
+  pwm.setPWM(rEyeRight,0,angleToPulse(180 - xSmoothed)); // Right
+  pwm.setPWM(rEyeUp,0,angleToPulse(ySmoothed)); // Up Down
+  pwm.setPWM(rEyeDown,0,angleToPulse(180 - ySmoothed)); // Down
 
 }
