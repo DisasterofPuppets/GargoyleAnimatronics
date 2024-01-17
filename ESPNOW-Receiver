@@ -231,9 +231,19 @@ void EYES(){
    joyX = multisample(myData.xpos);
    joyY = multisample(myData.ypos);
 
-   // manually mapping joystick range to angle
-   mapX = map(joyX,0,4095,0,180);
-   mapY = map(joyY,0,4095,0,180);
+ // Check if joystick values are within the dead zone
+  if (joyX > 1800 && joyX < 1950) {
+    mapX = 90;
+  } else {
+    // manually mapping joystick range to angle
+    mapX = map(joyX,0,4095,0,180);
+  }
+
+  if (joyY > 1800 && joyY < 1860) {
+    mapY = 90;
+  } else {
+    mapY = map(joyY,0,4095,0,180);
+  }
 
 // if too slow, mess with these rations (need to = 1 in total)
    xSmoothed = (mapX *0.3) + (xPrev * 0.7);
