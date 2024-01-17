@@ -1,0 +1,196 @@
+#include <Adafruit_PWMServoDriver.h>
+#include <Wire.h>
+//PCA9685
+
+#define joyXPin A0
+#define joyYPin A1
+#define SDAPin A4
+#define SCLPin A5
+#define mod1Pin 2
+#define mod2Pin 3
+#define mod3Pin 4
+#define mod4Pin 5
+float xSmoothed;
+float ySmoothed;
+float xPrev;
+float yPrev;
+int joyX; 
+int joyY;
+int mapX;
+int mapY;
+const int numSamples = 10;
+bool mod1 = false;
+bool mod2 = false;
+bool mod3 = false;
+bool mod4 = false;
+// Servo name to number
+int lLidTop = 0;
+int lLidBot = 1;
+int lEyeLeft = 2;
+int lEyeRight = 3;
+int lEyeUp = 4;
+int lEyeDown = 5;
+int rLidTop = 6;
+int rLidBot = 7;
+int rEyeLeft = 8;
+int rEyeRight = 9;
+int rEyeUp = 10;
+int rEyeDown = 11;
+int wingMid = 12;
+int wingLeft = 13;
+int wingRight = 14;
+int neck = 15;
+
+
+// called this way, it uses the default address 0x40
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
+
+/*******************SERVOS
+0 - lLidTop MG996R Servo
+1 - lLidBot MG996R Servo
+2 - lEyeLeft MG996R Servo
+3 - lEyeRight MG996R Servo
+4 - lEyeUp MG996R Servo
+5 - lEyeDown MG996R Servo
+6 - rLidTop MG996R Servo
+7 - rLidBot MG996R Servo
+8 - rEyeLeft MG996R Servo
+9 - rEyeRight MG996R Servo
+10 - rEyeUp MG996R Servo
+11 - rEyeDown MG996R Servo
+12 - wingMid MG996R Servo
+13 - wingLeft #DS3240 Servo
+14 - wingRight #DS3240 Servo
+15 - neck #DS3240 Servo
+*/
+
+// this accounts for both types of servo
+#define SERVOMIN  125 // this is the 'minimum' pulse length count (out of 4096)
+#define SERVOMAX  620 // this is the 'maximum' pulse length count (out of 4096)
+
+
+
+
+void setup() {
+ 
+  //Sanity Delay
+  delay(500);
+  
+  
+  //initialise servos
+  pwm.begin();
+  pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+  //MG966R will not work @ 50
+  
+  Serial.begin(9600);
+  
+  //set all servos to default neutral 90
+  Serial.println("Homing Servos");
+  for (int i = 0; i <16; i++){
+    pwm.setPWM(i,0,angleToPulse(90));
+  }
+
+  delay(1000);
+            
+  //set pin modes
+  pinMode(mod1,INPUT_PULLUP);
+  pinMode(mod2,INPUT_PULLUP);
+  pinMode(mod3,INPUT_PULLUP);
+  pinMode(mod4,INPUT_PULLUP);
+ 
+}
+
+
+void loop() {
+  
+// read inputs
+
+  int xPos = analogRead(joyX);
+  int yPos = analogRead(joyY);
+  mod1 = digitalRead(mod1Pin);
+  mod2 = digitalRead(mod2Pin);
+  mod3 = digitalRead(mod3Pin);
+  mod4 = digitalRead(mod4Pin);
+  
+  Serial.print("xpos: ");
+  Serial.println(xPos);
+  Serial.print("ypos: ");
+  Serial.println(yPos);
+  Serial.print("mod1: ");
+  Serial.println(mod1);
+  Serial.print("mod2: ");
+  Serial.println(mod2);
+  Serial.print("mod3: ");
+  Serial.println(mod3);
+  Serial.print("mod4: ");
+  Serial.println(mod4);
+  Serial.println();
+  
+  EYES();
+
+  
+/*
+Serial.println("180");
+pwm.setPWM(lEyeLeft,0,angleToPulse(180));
+pwm.setPWM(lEyeRight,0,angleToPulse(0));
+
+delay(3000);
+
+
+Serial.println("0");
+pwm.setPWM(lEyeLeft,0,angleToPulse(0));
+pwm.setPWM(lEyeRight,0,angleToPulse(180));
+ 
+delay(1000);
+*/
+}
+
+int angleToPulse(int ang){
+   int pulse = map(ang,0, 180, SERVOMIN,SERVOMAX);// map angle of 0 to 180 to Servo min and Servo max 
+  // Serial.print("Angle: ");Serial.print(ang);
+//   Serial.print(" pulse: ");Serial.println(pulse);
+   return pulse;
+}
+
+int multisample(int pin) {
+  int total = 0;
+  
+  for (int i = 0; i < numSamples; i++) {
+    total += analogRead(pin);
+    delay(1);  // You can adjust this delay if needed
+  }
+
+  return total / numSamples;
+}
+
+void EYES(){
+
+   joyX = multisample(joyXPin);
+   joyY = multisample(joyYPin);
+
+   // manually mapping angles here seems to fix issue / doesn't pickup servomin/max variable???
+   mapX = map(joyX,0,780,0,100);
+   mapY = map(joyY,0,780,0,100); //3.3v joystick only returns 0 to 780
+
+// if too slow, mess with these rations (need to = 1 in total)
+   xSmoothed = (mapX *0.3) + (xPrev * 0.7);
+   ySmoothed = (mapY *0.3) + (yPrev * 0.7);
+
+   xPrev = xSmoothed;
+   yPrev = ySmoothed;
+
+//Need to mirror these
+
+// Left Eye Movement
+  pwm.setPWM(lEyeLeft,0,angleToPulse(xSmoothed)); // Left
+  pwm.setPWM(lEyeRight,0,angleToPulse(180 - xSmoothed)); // Right
+  pwm.setPWM(lEyeUp,0,angleToPulse(ySmoothed)); // Up Down
+  pwm.setPWM(lEyeDown,0,angleToPulse(180 - ySmoothed)); // Down
+
+//Right Eye Movement  
+  pwm.setPWM(rEyeLeft,0,angleToPulse(xSmoothed)); // Left
+  pwm.setPWM(rEyeRight,0,angleToPulse(180 - xSmoothed)); // Right
+  pwm.setPWM(rEyeUp,0,angleToPulse(ySmoothed)); // Up Down
+  pwm.setPWM(rEyeDown,0,angleToPulse(180 - ySmoothed)); // Down
+
+}
