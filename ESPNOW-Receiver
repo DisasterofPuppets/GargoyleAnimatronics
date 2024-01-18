@@ -116,7 +116,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 //#define SERVOMAX  2500 // this is the 'maximum' pulse length count (out of 4096)
 
 #define SERVOMIN  125 // this is the 'minimum' pulse length count (out of 4096)
-#define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
+#define SERVOMAX  590 // this is the 'maximum' pulse length count (out of 4096)
 
 
 void setup() {
@@ -155,6 +155,20 @@ delay(1000);
   digitalWrite(OKLED,LOW);
 
 
+/*
+//////////////////TASK PRIORITY
+
+Causes crash 
+
+xTaskCreate(
+   EYES,     // function name
+  "EYES",  // task name
+  1000,           // stack size
+  NULL,           // task parameters
+  1,              // priority (lower number = higher priority)
+  NULL            // task handle
+);
+*/
 
 
 // Init ESP-NOW
@@ -177,6 +191,7 @@ delay(1000);
 
 }
 void loop() {
+/*
 // If no packet has been received for TIMEOUT_PERIOD
   if (millis() - lastReceiveTime > TIMEOUT_PERIOD) {
     // Turn on OKLED
@@ -187,7 +202,7 @@ void loop() {
     digitalWrite(OKLED, LOW);
     isConnected = true;
   }
-
+*/
 EYES();
 
 /*
@@ -214,22 +229,11 @@ int angleToPulse(int ang){
    return pulse;
 }
 
-int multisample(int pin) {
-  int total = 0;
-  
-  for (int i = 0; i < numSamples; i++) {
-    total += analogRead(pin);
-    delay(1);  // You can adjust this delay if needed
-  }
-
-  return total / numSamples;
-}
-
 void EYES(){
 
-// multisamples the joystick postion to average and smooth
-   joyX = multisample(myData.xpos);
-   joyY = multisample(myData.ypos);
+// joystick postion to average and smooth
+   joyX = myData.xpos;
+   joyY = myData.ypos;
 
  // Check if joystick values are within the dead zone
   if (joyX > 1800 && joyX < 1950) {
