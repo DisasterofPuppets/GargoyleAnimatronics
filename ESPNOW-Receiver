@@ -284,6 +284,6 @@ void Blink(){
     delay(300);
     // prob less than 90 required
     pwm.setPWM(lLidTop,0,angleToPulse(50)); //Eyes Open
-    pwm.setPWM(lLidBot,0,angleToPulse(50)); 
+    pwm.setPWM(lLidBot,0,angleToPulse(70)); 
 
 }
