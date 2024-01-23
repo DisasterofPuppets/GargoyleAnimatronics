@@ -154,7 +154,7 @@ Serial.println("Homing Servos");
     pwm.setPWM(lLidBot,0,angleToPulse(0)); // all the way foward
 
     
-delay(1000);
+delay(500);
           
 //set pin modes
   pinMode(OKLED,OUTPUT);
