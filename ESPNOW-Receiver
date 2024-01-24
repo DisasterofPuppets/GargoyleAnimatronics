@@ -4,6 +4,7 @@
 #include <Adafruit_PWMServoDriver.h>
 #include <Wire.h>
 //PCA9685
+bool Setup = false; // set this to false once you have set your servos
 
 String hostname = "Catcher";
 int OKLED = 27;
@@ -42,6 +43,7 @@ int wingMid = 12;
 int wingLeft = 13;
 int wingRight = 14;
 int neck = 15;
+
 
 
 // Structure example to receive data
@@ -142,17 +144,19 @@ randomSeed(analogRead(0)); // Initialize random number generator
 
 Serial.begin(115200);
 
-// Set servos to neutral
-Serial.println("Homing Servos");
   //set all servos to default neutral 90
   Serial.println("Homing Servos");
-  for (int i = 4; i <16; i++){
+  for (int i = 2; i <=5; i++){ //Left eye range before second lid
+    pwm.setPWM(i,0,angleToPulse(90)); // all the way forward
+  }
+    for (int i = 8; i <=15; i++){ //Left eye range after lid
     pwm.setPWM(i,0,angleToPulse(90)); // all the way forward
   }
 
     pwm.setPWM(lLidTop,0,angleToPulse(0)); // all the way forward
     pwm.setPWM(lLidBot,0,angleToPulse(0)); // all the way foward
-
+    pwm.setPWM(rLidTop,0,angleToPulse(0)); // all the way forward
+    pwm.setPWM(lLidBot,0,angleToPulse(0)); // all the way foward
     
 delay(500);
           
@@ -199,32 +203,42 @@ xTaskCreate(
 
 }
 void loop() {
-  // If no packet has been received for TIMEOUT_PERIOD
-  if (millis() - lastReceiveTime > TIMEOUT_PERIOD) {
-    // Turn on OKLED
-    digitalWrite(OKLED, HIGH);
-    isConnected = false;
-  } else {
-    // Turn off OKLED
-    digitalWrite(OKLED, LOW);
-    isConnected = true;
+  Serial.println("Yo, it's the loop");
+ 
+  if (Setup == false){  
+    // If no packet has been received for TIMEOUT_PERIOD
+    if (millis() - lastReceiveTime > TIMEOUT_PERIOD) {
+      // Turn on OKLED
+      digitalWrite(OKLED, HIGH);
+      isConnected = false;
+    } else {
+      // Turn off OKLED
+      digitalWrite(OKLED, LOW);
+      isConnected = true;
+    }
+  
+    // Check if the interval has passed
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      // Save the current time
+      previousMillis = currentMillis;
+  
+      // Call the Blink function
+      Blink();
+  
+      // Generate a new random interval
+      interval = random(2000, 5000);
+    }
+  
+    Eyes();
+ }
+  else {
+    //throw the manual positions you require the servo to sit for iniial setup
+    pwm.setPWM(rLidTop,0,angleToPulse(0));
+    pwm.setPWM(rLidBot,0,angleToPulse(0)); 
   }
 
-  // Check if the interval has passed
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    // Save the current time
-    previousMillis = currentMillis;
-
-    // Call the Blink function
-    Blink();
-
-    // Generate a new random interval
-    interval = random(2000, 5000);
-  }
-
-  Eyes();
-
+  
 }
 
 
@@ -281,9 +295,13 @@ void Eyes(){
 void Blink(){
     pwm.setPWM(lLidTop,0,angleToPulse(0)); // all the way forward Eyes Closed
     pwm.setPWM(lLidBot,0,angleToPulse(0)); // all the way foward
+    pwm.setPWM(rLidTop,0,angleToPulse(0)); // all the way forward Eyes Closed
+    pwm.setPWM(rLidBot,0,angleToPulse(0)); // all the way foward
     delay(300);
     // prob less than 90 required
     pwm.setPWM(lLidTop,0,angleToPulse(50)); //Eyes Open
     pwm.setPWM(lLidBot,0,angleToPulse(70)); 
+    pwm.setPWM(rLidTop,0,angleToPulse(70));
+    pwm.setPWM(rLidBot,0,angleToPulse(70)); 
 
 }
