@@ -5,6 +5,7 @@
 #include <Wire.h>
 //PCA9685
 bool Setup = false; // set this to false once you have set your servos
+bool Monitor = false; // save the serial spam, turn to true for troubleshooting
 
 String hostname = "Catcher";
 int OKLED = 27;
@@ -27,22 +28,17 @@ bool mod2 = false;
 bool mod3 = false;
 bool mod4 = false;
 // Servo name to number
-int lLidTop = 0;
-int lLidBot = 1;
-int lEyeLeft = 2;
-int lEyeRight = 3;
-int lEyeUp = 4;
-int lEyeDown = 5;
-int rLidTop = 6;
-int rLidBot = 7;
-int rEyeLeft = 8;
-int rEyeRight = 9;
-int rEyeUp = 10;
-int rEyeDown = 11;
-int wingMid = 12;
-int wingLeft = 13;
-int wingRight = 14;
-int neck = 15;
+int lLids = 0;
+int lEyeX = 1;
+int lEyeY = 2;
+int rLids = 3;
+int rEyeX = 4;
+int rEyeY = 5;
+int wingsX = 6;
+int wingsL = 7;
+int wingsR = 8;
+int mouth = 9;
+int neck = 10;
 
 
 
@@ -72,7 +68,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
   memcpy(&myData, incomingData, sizeof(myData));
 
-
+  if(Monitor == true){
     Serial.print("Bytes received: ");
     Serial.println(len);
   
@@ -90,28 +86,24 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     Serial.println(myData.mod4);
     Serial.println();
     */
+  }
 }
 
 // called this way, it uses the default address 0x40
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 /*******************SERVOS
-0 - lLidTop MG996R Servo
-1 - lLidBot MG996R Servo
-2 - lEyeLeft MG996R Servo
-3 - lEyeRight MG996R Servo
-4 - lEyeUp MG996R Servo
-5 - lEyeDown MG996R Servo
-6 - rLidTop MG996R Servo
-7 - rLidBot MG996R Servo
-8 - rEyeLeft MG996R Servo
-9 - rEyeRight MG996R Servo
-10 - rEyeUp MG996R Servo
-11 - rEyeDown MG996R Servo
-12 - wingMid MG996R Servo
-13 - wingLeft #DS3240 Servo
-14 - wingRight #DS3240 Servo
-15 - neck #DS3240 Servo
+0 - lLids MG996R Servo
+1 - lEyeX MG996R Servo
+2 - lEyeY MG996R Servo
+3 - rLids MG996R Servo
+4 - rEyeX MG996R Servo
+5 - rEyeY MG996R Servo
+6 - wingsX MG996R Servo
+7 - wingsL #DS3240 Servo
+8 - wingsR #DS3240 Servo
+9 - neck #DS3240 Servo
+10 - mouth TBD
 */
 
 // this accounts for both types of servo but doesn't seem to work with Arduino code?
@@ -153,10 +145,8 @@ Serial.begin(115200);
     pwm.setPWM(i,0,angleToPulse(90)); // all the way forward
   }
 
-    pwm.setPWM(lLidTop,0,angleToPulse(0)); // all the way forward
-    pwm.setPWM(lLidBot,0,angleToPulse(0)); // all the way foward
-    pwm.setPWM(rLidTop,0,angleToPulse(0)); // all the way forward
-    pwm.setPWM(lLidBot,0,angleToPulse(0)); // all the way foward
+    pwm.setPWM(rLids,0,angleToPulse(0)); // closed
+    pwm.setPWM(lLids,0,angleToPulse(0)); // closed
     
 delay(500);
           
@@ -229,14 +219,24 @@ void loop() {
       // Generate a new random interval
       interval = random(2000, 5000);
     }
-  
+
+  if (Setup == false){
     Eyes();
- }
-  else {
-    //throw the manual positions you require the servo to sit for iniial setup
-    pwm.setPWM(rLidTop,0,angleToPulse(0));
-    pwm.setPWM(rLidBot,0,angleToPulse(0)); 
   }
+ }
+  if (Setup == true){
+    //throw the manual positions you require the servo to sit for iniial setup
+    //0 is anticlockwise, 180 is clockwise
+    pwm.setPWM(lLids,0,angleToPulse(180)); //180 is open, 0 is closed
+    pwm.setPWM(lEyeX,0,angleToPulse(90)); 
+    pwm.setPWM(lEyeY,0,angleToPulse(90));
+    pwm.setPWM(rLids,0,angleToPulse(0));
+    pwm.setPWM(rEyeX,0,angleToPulse(90));
+    pwm.setPWM(rEyeY,0,angleToPulse(90));
+    Serial.println("Servos set to setup angles");
+    delay(7000);
+
+    }
 
   
 }
@@ -279,29 +279,24 @@ void Eyes(){
 //Need to mirror these
 
 // Left Eye Movement
-  pwm.setPWM(lEyeLeft,0,angleToPulse(xSmoothed)); // Left
-  pwm.setPWM(lEyeRight,0,angleToPulse(180 - xSmoothed)); // Right
-  pwm.setPWM(lEyeUp,0,angleToPulse(ySmoothed)); // Up Down
-  pwm.setPWM(lEyeDown,0,angleToPulse(180 - ySmoothed)); // Down
-
+  pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)); 
+  pwm.setPWM(lEyeY,0,angleToPulse(ySmoothed)); 
+  
 //Right Eye Movement  
-  pwm.setPWM(rEyeLeft,0,angleToPulse(xSmoothed)); // Left
-  pwm.setPWM(rEyeRight,0,angleToPulse(180 - xSmoothed)); // Right
-  pwm.setPWM(rEyeUp,0,angleToPulse(ySmoothed)); // Up Down
-  pwm.setPWM(rEyeDown,0,angleToPulse(180 - ySmoothed)); // Down
+  pwm.setPWM(rEyeX,0,angleToPulse(xSmoothed));
+  pwm.setPWM(rEyeY,0,angleToPulse(ySmoothed));
+  
 
 }
 
 void Blink(){
-    pwm.setPWM(lLidTop,0,angleToPulse(0)); // all the way forward Eyes Closed
-    pwm.setPWM(lLidBot,0,angleToPulse(0)); // all the way foward
-    pwm.setPWM(rLidTop,0,angleToPulse(0)); // all the way forward Eyes Closed
-    pwm.setPWM(rLidBot,0,angleToPulse(0)); // all the way foward
-    delay(300);
-    // prob less than 90 required
-    pwm.setPWM(lLidTop,0,angleToPulse(50)); //Eyes Open
-    pwm.setPWM(lLidBot,0,angleToPulse(70)); 
-    pwm.setPWM(rLidTop,0,angleToPulse(70));
-    pwm.setPWM(rLidBot,0,angleToPulse(70)); 
+
+    pwm.setPWM(lLids,0,angleToPulse(180)); // all the way forward Eyes Closed
+    pwm.setPWM(rLids,0,angleToPulse(180)); // all the way forward Eyes Closed
+    delay(1000);
+        
+    pwm.setPWM(lLids,0,angleToPulse(0));
+    pwm.setPWM(rLids,0,angleToPulse(0));   
+    delay(1000); // without this it won't travel the full angle. but it is too slow...troubleshooting time
 
 }
