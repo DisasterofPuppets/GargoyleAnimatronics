@@ -5,8 +5,7 @@
 #include <Wire.h>
 //PCA9685
 bool Setup = false; // set this to false once you have set your servos
-bool Monitor = false; // save the serial spam, turn to true for troubleshooting
-
+bool Monitor = true; // save the serial spam, turn to true for troubleshooting
 String hostname = "Catcher";
 int OKLED = 27;
 bool isConnected = false;
@@ -145,10 +144,10 @@ Serial.begin(115200);
     pwm.setPWM(i,0,angleToPulse(90)); // all the way forward
   }
 
-    pwm.setPWM(rLids,0,angleToPulse(0)); // closed
-    pwm.setPWM(lLids,0,angleToPulse(0)); // closed
+    pwm.setPWM(rLids,0,angleToPulse(80)); 
+    pwm.setPWM(lLids,0,angleToPulse(80)); 
     
-delay(500);
+delay(800);
           
 //set pin modes
   pinMode(OKLED,OUTPUT);
@@ -193,6 +192,11 @@ xTaskCreate(
 
 }
 void loop() {
+
+if (Setup == true){
+    Monitor = true;
+}
+  
   Serial.println("Yo, it's the loop");
  
   if (Setup == false){  
@@ -217,7 +221,7 @@ void loop() {
       Blink();
   
       // Generate a new random interval
-      interval = random(2000, 5000);
+      interval = random(5000, 10000);
     }
 
   if (Setup == false){
@@ -226,11 +230,16 @@ void loop() {
  }
   if (Setup == true){
     //throw the manual positions you require the servo to sit for iniial setup
-    //0 is anticlockwise, 180 is clockwise
-    pwm.setPWM(lLids,0,angleToPulse(180)); //180 is open, 0 is closed
+    //0 is clockwise, 180 is anti-clockwise
+
+
+// for the Lids, Set to 90, centre servo horn, set bottom string to closed.
+// move to 140, set top string to open.
+    
+    pwm.setPWM(lLids,0,angleToPulse(90)); // 
     pwm.setPWM(lEyeX,0,angleToPulse(90)); 
     pwm.setPWM(lEyeY,0,angleToPulse(90));
-    pwm.setPWM(rLids,0,angleToPulse(0));
+    pwm.setPWM(rLids,0,angleToPulse(90)); //
     pwm.setPWM(rEyeX,0,angleToPulse(90));
     pwm.setPWM(rEyeY,0,angleToPulse(90));
     Serial.println("Servos set to setup angles");
@@ -289,14 +298,12 @@ void Eyes(){
 
 }
 
-void Blink(){
+void Blink() {
 
-    pwm.setPWM(lLids,0,angleToPulse(180)); // all the way forward Eyes Closed
-    pwm.setPWM(rLids,0,angleToPulse(180)); // all the way forward Eyes Closed
-    delay(1000);
-        
-    pwm.setPWM(lLids,0,angleToPulse(0));
-    pwm.setPWM(rLids,0,angleToPulse(0));   
-    delay(1000); // without this it won't travel the full angle. but it is too slow...troubleshooting time
-
+        pwm.setPWM(lLids, 0, angleToPulse(80)); 
+        pwm.setPWM(rLids, 0, angleToPulse(80)); 
+        delay(350);
+        pwm.setPWM(lLids, 0, angleToPulse(150)); 
+        pwm.setPWM(rLids, 0, angleToPulse(150)); 
+        delay(350);
 }
