@@ -5,12 +5,14 @@
 #include <Wire.h>
 //PCA9685
 bool Setup = false; // set this to false once you have set your servos
-bool Monitor = true; // save the serial spam, turn to true for troubleshooting
+bool Monitor = false; // save the serial spam, turn to true for troubleshooting
 String hostname = "Catcher";
 int OKLED = 27;
 bool isConnected = false;
 unsigned long lastReceiveTime = 0;
 unsigned long previousMillis = 0; 
+unsigned long previousMillis1 = 0; 
+const long interval1 = 12; //delay on neck tilting
 unsigned long interval = random(2000, 5000); // generates a random number between 2000 and 5000
 const unsigned long TIMEOUT_PERIOD = 5000; // Adjust the timeout period in milliseconds
 float xSmoothed;
@@ -36,8 +38,9 @@ int rEyeY = 5;
 int wingsX = 6;
 int wingsL = 7;
 int wingsR = 8;
-int mouth = 9;
-int neck = 10;
+int neckRotate = 9;
+int neckX = 10;
+int neckY =11;
 
 
 
@@ -101,8 +104,9 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 6 - wingsX MG996R Servo
 7 - wingsL #DS3240 Servo
 8 - wingsR #DS3240 Servo
-9 - neck #DS3240 Servo
-10 - mouth TBD
+9 - neckRotate MG996R Servo
+10 - neckh MG996R Servo
+11 - neckv MG996R Servo
 */
 
 // this accounts for both types of servo but doesn't seem to work with Arduino code?
@@ -137,11 +141,11 @@ Serial.begin(115200);
 
   //set all servos to default neutral 90
   Serial.println("Homing Servos");
-  for (int i = 2; i <=5; i++){ //Left eye range before second lid
-    pwm.setPWM(i,0,angleToPulse(90)); // all the way forward
+  for (int i = 2; i <=5; i++){ 
+    pwm.setPWM(i,0,angleToPulse(90));
   }
-    for (int i = 8; i <=15; i++){ //Left eye range after lid
-    pwm.setPWM(i,0,angleToPulse(90)); // all the way forward
+    for (int i = 8; i <=15; i++){ 
+    pwm.setPWM(i,0,angleToPulse(90));
   }
 
     pwm.setPWM(rLids,0,angleToPulse(80)); 
@@ -195,10 +199,9 @@ void loop() {
 
 if (Setup == true){
     Monitor = true;
+    Serial.println("Yo, it's the loop");
 }
-  
-  Serial.println("Yo, it's the loop");
- 
+   
   if (Setup == false){  
     // If no packet has been received for TIMEOUT_PERIOD
     if (millis() - lastReceiveTime > TIMEOUT_PERIOD) {
@@ -225,7 +228,9 @@ if (Setup == true){
     }
 
   if (Setup == false){
-    Eyes();
+    //Eyes();
+    NeckTilt();
+    //NeckTurn();
   }
  }
   if (Setup == true){
@@ -236,12 +241,15 @@ if (Setup == true){
 // for the Lids, Set to 90, centre servo horn, set bottom string to closed.
 // move to 140, set top string to open.
     
-    pwm.setPWM(lLids,0,angleToPulse(90)); // 
-    pwm.setPWM(lEyeX,0,angleToPulse(90)); 
-    pwm.setPWM(lEyeY,0,angleToPulse(90));
-    pwm.setPWM(rLids,0,angleToPulse(90)); //
-    pwm.setPWM(rEyeX,0,angleToPulse(90));
-    pwm.setPWM(rEyeY,0,angleToPulse(90));
+    //pwm.setPWM(lLids,0,angleToPulse(150)); // 
+    //pwm.setPWM(lEyeX,0,angleToPulse(90)); 
+    //pwm.setPWM(lEyeY,0,angleToPulse(90));
+    //pwm.setPWM(rLids,0,angleToPulse(150)); //
+    //pwm.setPWM(rEyeX,0,angleToPulse(90));
+    //pwm.setPWM(rEyeY,0,angleToPulse(90));
+    pwm.setPWM(neckRotate,0,angleToPulse(90));
+    pwm.setPWM(neckX,0,angleToPulse(90));
+    pwm.setPWM(neckY,0,angleToPulse(90));
     Serial.println("Servos set to setup angles");
     delay(7000);
 
@@ -272,20 +280,18 @@ void Eyes(){
     mapX = map(joyX,0,4095,0,180);
   }
 
-  if (joyY > 1825 && joyY < 1895) {
+  if (joyY > 1800 && joyY < 1895) {
     mapY = 90;
   } else {
     mapY = map(joyY,0,4095,0,180);
   }
 
-// if too slow, mess with these rations (need to = 1 in total)
+// if too slow, mess with these ratios (need to = 1 in total)
    xSmoothed = (mapX *0.3) + (xPrev * 0.7);
    ySmoothed = (mapY *0.3) + (yPrev * 0.7);
 
    xPrev = xSmoothed;
    yPrev = ySmoothed;
-
-//Need to mirror these
 
 // Left Eye Movement
   pwm.setPWM(lEyeX,0,angleToPulse(xSmoothed)); 
@@ -298,12 +304,76 @@ void Eyes(){
 
 }
 
+void NeckTilt(){
+
+  unsigned long currentMillis1 = millis(); // had to use this to slow things down else it was too fast
+  
+  if (currentMillis1 - previousMillis1 >= interval1) {
+    previousMillis1 = currentMillis1;
+    
+// joystick postion to average and smooth
+   joyX = myData.xpos;
+   joyY = myData.ypos;
+  // Check if joystick values are within the dead zone
+  if (joyX > 1835 && joyX < 1940) {
+    mapX = 90;
+  } else {
+    // manually mapping joystick range to angle
+    mapX = map(joyX,0,4095,0,180);
+  }
+
+  if (joyY > 1800 && joyY < 1895) {
+    mapY = 90;
+  } else {
+    mapY = map(joyY,0,4095,0,180);
+  }
+
+// if too slow, mess with these ratios (need to = 1 in total)
+// TBH, I didn't really see any difference when messing around with these.
+   xSmoothed = (mapX *0.03) + (xPrev * 0.97);
+   ySmoothed = (mapY *0.03) + (yPrev * 0.97);
+   
+
+   xPrev = xSmoothed;
+   yPrev = ySmoothed;
+
+  pwm.setPWM(neckX,0,angleToPulse(xSmoothed)); 
+  pwm.setPWM(neckY,0,angleToPulse(ySmoothed)); 
+ // Serial.println(xSmoothed);
+
+  }
+}
+
+
+void NeckTurn(){
+
+// joystick postion to average and smooth
+   joyX = myData.xpos;
+  // Check if joystick values are within the dead zone
+  if (joyX > 1835 && joyX < 1940) {
+    mapX = 90;
+  } else {
+    // manually mapping joystick range to angle
+    mapX = map(joyX,0,4095,0,180);
+  }
+
+// if too slow, mess with these ratios (need to = 1 in total)
+   xSmoothed = (mapX *0.3) + (xPrev * 0.7);
+ 
+   xPrev = xSmoothed;
+
+ pwm.setPWM(neckRotate,0,angleToPulse(xSmoothed)); 
+
+
+
+}
+
 void Blink() {
 
         pwm.setPWM(lLids, 0, angleToPulse(80)); 
         pwm.setPWM(rLids, 0, angleToPulse(80)); 
-        delay(350);
+        delay(400);
         pwm.setPWM(lLids, 0, angleToPulse(150)); 
         pwm.setPWM(rLids, 0, angleToPulse(150)); 
-        delay(350);
+        delay(400);
 }
